@@ -1,0 +1,2601 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campus Circular — From Ownership to Access | The Intelligent Campus Sharing Ecosystem</title>
+  
+  <!-- Fonts: Manrope & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Manrope', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & Babel Standalone -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Real Client-Side Object Detection: TensorFlow.js & COCO-SSD -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
+  <style>
+    body {
+      background-color: #050505;
+      color: #ffffff;
+      font-family: 'Manrope', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090909;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #262626;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3f3f46;
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeSlideUp {
+      animation: fadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Living / Organic Breathing Logo Keyframes */
+    @keyframes organicBreathe {
+      0%, 100% {
+        transform: scale(1) rotate(0deg);
+        filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.35));
+      }
+      33% {
+        transform: scale(1.06) rotate(2deg);
+        filter: drop-shadow(0 0 20px rgba(52, 211, 153, 0.65)) drop-shadow(0 0 35px rgba(6, 182, 212, 0.4));
+      }
+      66% {
+        transform: scale(0.96) rotate(-2deg);
+        filter: drop-shadow(0 0 14px rgba(16, 185, 129, 0.45));
+      }
+    }
+    .living-logo-glow {
+      animation: organicBreathe 5s ease-in-out infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .living-logo-glow { animation: none; }
+    }
+  </style>
+</head>
+<body class="selection:bg-emerald-500 selection:text-black min-h-screen flex flex-col">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+    // ==========================================
+    // 1. DATASETS (52+ CAMPUS PRODUCTS, IMPACT, USERS, DISPUTES)
+    // ==========================================
+    const CATEGORIES = [
+      { id: 'all', name: 'All Resources', icon: '✨', count: 52 },
+      { id: 'books', name: 'Books & Study', icon: '📚', count: 7 },
+      { id: 'electronics', name: 'Electronics & Gadgets', icon: '💻', count: 8 },
+      { id: 'lab', name: 'Lab & Engineering', icon: '⚡', count: 6 },
+      { id: 'stationery', name: 'Stationery & Drafters', icon: '📐', count: 5 },
+      { id: 'furniture', name: 'Hostel Furniture', icon: '🪑', count: 5 },
+      { id: 'clothing', name: 'Clothing & Lab Coats', icon: '🧥', count: 4 },
+      { id: 'sports', name: 'Sports & Fitness', icon: '🏸', count: 5 },
+      { id: 'bags', name: 'Bags & Backpacks', icon: '🎒', count: 4 },
+      { id: 'hostel', name: 'Hostel Essentials', icon: '🔌', count: 5 },
+      { id: 'art', name: 'Art & Creative', icon: '🎨', count: 3 }
+    ];
+
+    const INITIAL_PRODUCTS = [
+      // BOOKS & STUDY
+      {
+        id: 'p-1',
+        title: 'Higher Engineering Mathematics by B.S. Grewal (44th Edition)',
+        category: 'books',
+        description: 'Comprehensive math guide covering calculus, linear algebra, vector calculus, Fourier series, and differential equations. Unmarked, crisp pages with formula bookmark.',
+        price: 280,
+        hourlyRate: 10,
+        dailyRate: 25,
+        securityDeposit: 150,
+        isFree: false,
+        condition: 'Like New (9.5/10)',
+        image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Aarav Sharma', dept: 'Computer Engg, Year 3', trustScore: 98, avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Hostel 3, Room 214',
+        distanceMeters: 110,
+        walkTimeMinutes: 2,
+        tags: ['math', 'engineering', 'textbook', 'grewal', 'sem1', 'sem2'],
+        views: 84,
+        likes: 12,
+        status: 'active'
+      },
+      {
+        id: 'p-2',
+        title: 'Discrete-Time Signal Processing by Oppenheim & Schafer',
+        category: 'books',
+        description: 'Standard DSP reference textbook for EXTC and Computer branches. Includes solved problem sheets tucked inside.',
+        price: 320,
+        hourlyRate: 10,
+        dailyRate: 30,
+        securityDeposit: 200,
+        isFree: false,
+        condition: 'Good (8.8/10)',
+        image: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Priya Patel', dept: 'EXTC, Year 4', trustScore: 99, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Library Reading Hall',
+        distanceMeters: 60,
+        walkTimeMinutes: 1,
+        tags: ['dsp', 'signals', 'extc', 'oppenheim', 'exam'],
+        views: 65,
+        likes: 8,
+        status: 'active'
+      },
+      {
+        id: 'p-3',
+        title: 'GATE Computer Science 2026 Made Easy Complete Handbook',
+        category: 'books',
+        description: 'Concise theory summary handbook with all algorithms, OS, DBMS, CN, and TOC formula summaries.',
+        price: 350,
+        hourlyRate: 15,
+        dailyRate: 35,
+        securityDeposit: 200,
+        isFree: false,
+        condition: 'Mint / Pristine (10/10)',
+        image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Dev Shah', dept: 'IT Dept, Year 4', trustScore: 97, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Hostel 1, Room 408',
+        distanceMeters: 230,
+        walkTimeMinutes: 3,
+        tags: ['gate', 'cse', 'handbook', 'competitive', 'formulas'],
+        views: 112,
+        likes: 24,
+        status: 'active'
+      },
+      {
+        id: 'p-4',
+        title: 'Manhattan Prep GRE 5 lb. Book of Practice Problems',
+        category: 'books',
+        description: 'Over 1,800 practice questions for GRE quant and verbal preparation with detailed explanations.',
+        price: 450,
+        hourlyRate: 15,
+        dailyRate: 40,
+        securityDeposit: 300,
+        isFree: false,
+        condition: 'Excellent (9.2/10)',
+        image: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Sarah J.', dept: 'Computer Engg, Year 3', trustScore: 98, avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Hostel 2 Common Area',
+        distanceMeters: 140,
+        walkTimeMinutes: 2,
+        tags: ['gre', 'manhattan', 'study', 'masters', 'quant'],
+        views: 78,
+        likes: 15,
+        status: 'active'
+      },
+      {
+        id: 'p-5',
+        title: 'Operating System Concepts (Dinosaur Book) by Silberschatz',
+        category: 'books',
+        description: 'Classic textbook on processes, concurrency, memory management, and file systems. Great for Sem 4 exams.',
+        price: 290,
+        hourlyRate: 10,
+        dailyRate: 25,
+        securityDeposit: 150,
+        isFree: false,
+        condition: 'Good (8.7/10)',
+        image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Rohan Mehta', dept: 'Mechanical, Year 2', trustScore: 99, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Central Library Floor 2',
+        distanceMeters: 75,
+        walkTimeMinutes: 1,
+        tags: ['os', 'linux', 'processes', 'sem4', 'silberschatz'],
+        views: 45,
+        likes: 6,
+        status: 'active'
+      },
+      {
+        id: 'p-6',
+        title: 'Fundamentals of Electric Circuits by Alexander & Sadiku',
+        category: 'books',
+        description: 'Comprehensive network analysis and circuit solver guide for first and second year engineering.',
+        price: 310,
+        hourlyRate: 10,
+        dailyRate: 25,
+        securityDeposit: 150,
+        isFree: false,
+        condition: 'Very Good (9.0/10)',
+        image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Tanya Sen', dept: 'EXTC Dept, Year 3', trustScore: 97, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Electronics Block B',
+        distanceMeters: 290,
+        walkTimeMinutes: 4,
+        tags: ['circuits', 'sadiku', 'network', 'firstyear', 'ee'],
+        views: 52,
+        likes: 9,
+        status: 'active'
+      },
+      {
+        id: 'p-7',
+        title: 'Introduction to Algorithms (CLRS 3rd Edition)',
+        category: 'books',
+        description: 'The bible of algorithms. Dynamic programming, graph algorithms, NP-completeness, and data structures.',
+        price: 550,
+        hourlyRate: 20,
+        dailyRate: 45,
+        securityDeposit: 400,
+        isFree: false,
+        condition: 'Excellent (9.4/10)',
+        image: 'https://images.unsplash.com/photo-1532012164546-f432f2e3777f?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Kabir Singh', dept: 'IT Dept, Year 3', trustScore: 97, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Hostel 4, Room 102',
+        distanceMeters: 180,
+        walkTimeMinutes: 2,
+        tags: ['clrs', 'algorithms', 'dsa', 'leetcode', 'placement'],
+        views: 142,
+        likes: 31,
+        status: 'active'
+      },
+
+      // ELECTRONICS
+      {
+        id: 'p-8',
+        title: 'Canon EOS 80D Creator DSLR Kit + 18-55mm IS STM Lens',
+        category: 'electronics',
+        description: '24.2 MP DSLR camera with Dual Pixel AF, perfect for college fest promo reels, interviews, and photography workshops.',
+        price: 34000,
+        hourlyRate: 60,
+        dailyRate: 250,
+        securityDeposit: 1000,
+        isFree: false,
+        condition: 'Like New (9.8/10)',
+        image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Priya Patel', dept: 'Media Club Lead', trustScore: 98, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Hostel 3, Room 214',
+        distanceMeters: 120,
+        walkTimeMinutes: 2,
+        tags: ['camera', 'dslr', 'canon', 'video', 'reels', 'photography'],
+        views: 310,
+        likes: 54,
+        status: 'active'
+      },
+      {
+        id: 'p-9',
+        title: 'Sony Alpha A6400 4K Mirrorless Camera + SmallRig Cage',
+        category: 'electronics',
+        description: '4K video powerhouse with real-time Eye AF, 16-50mm power zoom lens, 3x batteries, and aluminum rigging cage.',
+        price: 48000,
+        hourlyRate: 70,
+        dailyRate: 290,
+        securityDeposit: 1200,
+        isFree: false,
+        condition: 'Excellent (9.2/10)',
+        image: 'https://images.unsplash.com/photo-1512790182412-b19e6d62bc39?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Dev Shah', dept: 'Computer Engg, Year 4', trustScore: 96, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Hostel 1, Room 408',
+        distanceMeters: 220,
+        walkTimeMinutes: 3,
+        tags: ['sony', 'mirrorless', '4k', 'vlog', 'smallrig'],
+        views: 225,
+        likes: 41,
+        status: 'active'
+      },
+      {
+        id: 'p-10',
+        title: 'Casio FX-991CW ClassWiz Scientific Calculator (Exam Approved)',
+        category: 'electronics',
+        description: 'High-res natural textbook display, 540+ functions, 4x4 matrix equations. Mandatory for all university semester exams.',
+        price: 950,
+        hourlyRate: 10,
+        dailyRate: 30,
+        securityDeposit: 200,
+        isFree: false,
+        condition: 'Mint / Brand New (10/10)',
+        image: 'https://images.unsplash.com/photo-1611125832047-1d7ad1e8e485?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Rohan Mehta', dept: 'Mechanical, Year 2', trustScore: 99, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Central Library Desk',
+        distanceMeters: 50,
+        walkTimeMinutes: 1,
+        tags: ['calculator', 'casio', 'exam', 'engineering', 'math'],
+        views: 420,
+        likes: 68,
+        status: 'active'
+      },
+      {
+        id: 'p-11',
+        title: 'Dell 24" UltraSharp FHD IPS Monitor with USB-C Hub',
+        category: 'electronics',
+        description: '99% sRGB color accurate display with height/tilt/pivot stand. Great for coding, dual-screen laptop setup in hostel.',
+        price: 8500,
+        hourlyRate: 30,
+        dailyRate: 90,
+        securityDeposit: 800,
+        isFree: false,
+        condition: 'Excellent (9.3/10)',
+        image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Aarav Sharma', dept: 'Computer Engg, Year 3', trustScore: 98, avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Hostel 3, Room 214',
+        distanceMeters: 120,
+        walkTimeMinutes: 2,
+        tags: ['monitor', 'screen', 'dell', 'ips', 'coding', 'setup'],
+        views: 188,
+        likes: 32,
+        status: 'active'
+      },
+      {
+        id: 'p-12',
+        title: 'Logitech MX Master 3S Wireless Performance Mouse',
+        category: 'electronics',
+        description: 'Quiet clicks, MagSpeed 8K DPI electromagnetic scrolling, multi-device flow switching between Mac and Windows.',
+        price: 5200,
+        hourlyRate: 15,
+        dailyRate: 40,
+        securityDeposit: 400,
+        isFree: false,
+        condition: 'Like New (9.7/10)',
+        image: 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Dev Shah', dept: 'IT Dept, Year 4', trustScore: 96, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Hostel 1, Room 408',
+        distanceMeters: 220,
+        walkTimeMinutes: 3,
+        tags: ['mouse', 'logitech', 'mxmaster', 'ergonomic', 'productivity'],
+        views: 130,
+        likes: 21,
+        status: 'active'
+      },
+      {
+        id: 'p-13',
+        title: 'Bose QuietComfort 45 Noise-Cancelling Headphones',
+        category: 'electronics',
+        description: '24-hour battery life, active ANC for deep silence in loud library study halls or hostel corridors.',
+        price: 14500,
+        hourlyRate: 25,
+        dailyRate: 90,
+        securityDeposit: 700,
+        isFree: false,
+        condition: 'Like New (9.6/10)',
+        image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Sarah J.', dept: 'Computer Engg, Year 3', trustScore: 98, avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Library Silent Study Area',
+        distanceMeters: 80,
+        walkTimeMinutes: 1,
+        tags: ['headphones', 'bose', 'anc', 'audio', 'study', 'focus'],
+        views: 240,
+        likes: 47,
+        status: 'active'
+      },
+      {
+        id: 'p-14',
+        title: 'MacBook Pro 16" M2 Pro (32GB RAM / 1TB SSD) Render Rig',
+        category: 'electronics',
+        description: 'High-spec workstation laptop for 3D Blender rendering, mobile app compilation, and 4K editing projects.',
+        price: 135000,
+        hourlyRate: 80,
+        dailyRate: 350,
+        securityDeposit: 2500,
+        isFree: false,
+        condition: 'Mint / Pristine (9.9/10)',
+        image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Dept Tech Bank', dept: 'Computer Lab 4', trustScore: 100, avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Computer Dept Lab 4',
+        distanceMeters: 200,
+        walkTimeMinutes: 2,
+        tags: ['macbook', 'apple', 'laptop', 'm2', 'rendering', 'hackathon'],
+        views: 380,
+        likes: 72,
+        status: 'active'
+      },
+      {
+        id: 'p-15',
+        title: 'Keychron K2 V2 Wireless Mechanical Keyboard (Gateron Brown)',
+        category: 'electronics',
+        description: '75% layout mechanical keyboard with tactile brown switches, Mac/Windows layout keys, and RGB backlighting.',
+        price: 4200,
+        hourlyRate: 15,
+        dailyRate: 40,
+        securityDeposit: 350,
+        isFree: false,
+        condition: 'Very Good (9.1/10)',
+        image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Kabir Singh', dept: 'IT Dept, Year 3', trustScore: 97, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Hostel 4, Room 102',
+        distanceMeters: 190,
+        walkTimeMinutes: 2,
+        tags: ['keyboard', 'keychron', 'mechanical', 'rgb', 'coding'],
+        views: 115,
+        likes: 18,
+        status: 'active'
+      },
+
+      // LAB & TOOLS
+      {
+        id: 'p-16',
+        title: 'Rigol DS1054Z 50MHz 4-Channel Digital Storage Oscilloscope',
+        category: 'lab',
+        description: '1 GSa/s 4-channel DSO with 24 Mpts memory depth and probes for circuit analysis and DSP project testing.',
+        price: 24000,
+        hourlyRate: 25,
+        dailyRate: 90,
+        securityDeposit: 1500,
+        isFree: false,
+        condition: 'Excellent (9.5/10)',
+        image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Electronics Lab Council', dept: 'Campus Lab Pool', trustScore: 100, avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Electronics Lab 3',
+        distanceMeters: 350,
+        walkTimeMinutes: 4,
+        tags: ['oscilloscope', 'rigol', 'circuits', 'signals', 'dsp', 'hardware'],
+        views: 195,
+        likes: 38,
+        status: 'active'
+      },
+      {
+        id: 'p-17',
+        title: 'Arduino Uno R3 & ESP32 37-in-1 IoT Sensor Prototyping Kit',
+        category: 'lab',
+        description: 'Complete sensor suite with ultrasonic, DHT11, PIR, relay, OLED screen, breadboard, and 65 jumper wires.',
+        price: 1600,
+        hourlyRate: 15,
+        dailyRate: 45,
+        securityDeposit: 400,
+        isFree: false,
+        condition: 'Great (9.0/10)',
+        image: 'https://images.unsplash.com/photo-1553406830-ef2513450d76?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'IoT Club Cell', dept: 'Robotics Wing', trustScore: 98, avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Robotics Workshop, Mech Bldg',
+        distanceMeters: 280,
+        walkTimeMinutes: 3,
+        tags: ['arduino', 'esp32', 'iot', 'sensors', 'electronics', 'hackathon'],
+        views: 260,
+        likes: 45,
+        status: 'active'
+      },
+      {
+        id: 'p-18',
+        title: 'Creality Ender 3 V2 3D Printer (Silent Motherboard + Glass Bed)',
+        category: 'lab',
+        description: 'Pre-calibrated 3D printer for fabricating custom robot brackets, hackathon enclosures, and mechanisms.',
+        price: 15500,
+        hourlyRate: 30,
+        dailyRate: 120,
+        securityDeposit: 1000,
+        isFree: false,
+        condition: 'Good (8.7/10)',
+        image: 'https://images.unsplash.com/photo-1631556097152-c39479bbf8a5?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'MakerSpace Cell', dept: 'Mech Ground Floor', trustScore: 99, avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'MakerSpace Innovation Lab',
+        distanceMeters: 310,
+        walkTimeMinutes: 4,
+        tags: ['3dprinter', 'maker', 'prototype', 'pla', 'cad', 'creality'],
+        views: 290,
+        likes: 62,
+        status: 'active'
+      },
+      {
+        id: 'p-19',
+        title: 'Bosch 12V Cordless Drill & 42-Piece Bit Set in Hard Case',
+        category: 'lab',
+        description: '2-speed impact drill with 2x 2.0Ah lithium batteries, charger, and titanium bits for project fabrication.',
+        price: 3800,
+        hourlyRate: 20,
+        dailyRate: 60,
+        securityDeposit: 400,
+        isFree: false,
+        condition: 'Good (8.8/10)',
+        image: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'SAE Auto Club', dept: 'Automotive Team', trustScore: 98, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'SAE Auto Workshop',
+        distanceMeters: 260,
+        walkTimeMinutes: 3,
+        tags: ['drill', 'tools', 'bosch', 'workshop', 'hardware', 'fabrication'],
+        views: 140,
+        likes: 22,
+        status: 'active'
+      },
+      {
+        id: 'p-20',
+        title: 'Hakko 60W Temperature Controlled Soldering Station + Solder Wire',
+        category: 'lab',
+        description: 'Adjustable heat (200°C - 480°C) soldering iron with brass tip cleaner, lead-free solder wire, and desoldering pump.',
+        price: 1800,
+        hourlyRate: 15,
+        dailyRate: 35,
+        securityDeposit: 250,
+        isFree: false,
+        condition: 'Excellent (9.3/10)',
+        image: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Tanya Sen', dept: 'EXTC Dept, Year 3', trustScore: 97, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Electronics Block B',
+        distanceMeters: 290,
+        walkTimeMinutes: 4,
+        tags: ['soldering', 'electronics', 'circuits', 'diy', 'repair'],
+        views: 85,
+        likes: 14,
+        status: 'active'
+      },
+      {
+        id: 'p-21',
+        title: 'Fluke 101 Pocket Digital Multimeter with Gold-Plated Probes',
+        category: 'lab',
+        description: 'CAT III 600V safety rated true-RMS multimeter for measuring DC/AC voltage, continuity, resistance, and capacitance.',
+        price: 2600,
+        hourlyRate: 10,
+        dailyRate: 30,
+        securityDeposit: 300,
+        isFree: false,
+        condition: 'Mint / Pristine (9.9/10)',
+        image: 'https://images.unsplash.com/photo-1581092162384-8987c1d64718?auto=format&fit=crop&w=800&q=80',
+        seller: { name: 'Rohan Mehta', dept: 'Mechanical, Year 2', trustScore: 99, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80', verified: true },
+        location: 'Mech Lab 2',
+        distanceMeters: 210,
+        walkTimeMinutes: 2,
+        tags: ['multimeter', 'fluke', 'electrical', 'voltage', 'testing'],
+        views: 110,
+        likes: 19,
+        status: 'active'
+      }
+    ];
+
+    // IMPACT DATASET BY PERIOD
+    const IMPACT_HISTORICAL_DATA = {
+      '7d': {
+        totalExchanges: 36,
+        successfulExchanges: 36,
+        studentSavings: 12400,
+        resourcesReused: 24,
+        activeListings: 52,
+        activeMembers: 140,
+        avgTrustScore: 98.9,
+        onTimeRate: 100,
+        mostReusedCategory: 'Books & Study',
+        avgExchangeValue: 344,
+        trendPoints: [
+          { label: 'Mon', value: 4, savings: 1200 },
+          { label: 'Tue', value: 6, savings: 2100 },
+          { label: 'Wed', value: 5, savings: 1800 },
+          { label: 'Thu', value: 7, savings: 2400 },
+          { label: 'Fri', value: 8, savings: 2900 },
+          { label: 'Sat', value: 4, savings: 1300 },
+          { label: 'Sun', value: 2, savings: 700 }
+        ],
+        categories: [
+          { name: 'Books', pct: 36, count: 13, color: '#10b981' },
+          { name: 'Electronics', pct: 28, count: 10, color: '#38bdf8' },
+          { name: 'Lab Tools', pct: 17, count: 6, color: '#a855f7' },
+          { name: 'Hostel Gear', pct: 11, count: 4, color: '#f59e0b' },
+          { name: 'Sports', pct: 8, count: 3, color: '#ec4899' }
+        ]
+      },
+      '30d': {
+        totalExchanges: 156,
+        successfulExchanges: 154,
+        studentSavings: 54200,
+        resourcesReused: 112,
+        activeListings: 52,
+        activeMembers: 520,
+        avgTrustScore: 98.6,
+        onTimeRate: 98.7,
+        mostReusedCategory: 'Electronics & Gadgets',
+        avgExchangeValue: 347,
+        trendPoints: [
+          { label: 'Week 1', value: 32, savings: 11200 },
+          { label: 'Week 2', value: 38, savings: 13400 },
+          { label: 'Week 3', value: 45, savings: 15800 },
+          { label: 'Week 4', value: 41, savings: 13800 }
+        ],
+        categories: [
+          { name: 'Electronics', pct: 34, count: 53, color: '#38bdf8' },
+          { name: 'Books', pct: 30, count: 47, color: '#10b981' },
+          { name: 'Lab Tools', pct: 18, count: 28, color: '#a855f7' },
+          { name: 'Furniture', pct: 12, count: 19, color: '#f59e0b' },
+          { name: 'Sports', pct: 6, count: 9, color: '#ec4899' }
+        ]
+      },
+      'semester': {
+        totalExchanges: 680,
+        successfulExchanges: 672,
+        studentSavings: 248000,
+        resourcesReused: 490,
+        activeListings: 52,
+        activeMembers: 1850,
+        avgTrustScore: 98.4,
+        onTimeRate: 98.8,
+        mostReusedCategory: 'Books & Academics',
+        avgExchangeValue: 364,
+        trendPoints: [
+          { label: 'Month 1', value: 120, savings: 44000 },
+          { label: 'Month 2', value: 165, savings: 59000 },
+          { label: 'Month 3', value: 195, savings: 72000 },
+          { label: 'Month 4', value: 200, savings: 73000 }
+        ],
+        categories: [
+          { name: 'Books', pct: 33, count: 224, color: '#10b981' },
+          { name: 'Electronics', pct: 29, count: 197, color: '#38bdf8' },
+          { name: 'Lab Tools', pct: 17, count: 116, color: '#a855f7' },
+          { name: 'Furniture', pct: 13, count: 88, color: '#f59e0b' },
+          { name: 'Sports', pct: 8, count: 55, color: '#ec4899' }
+        ]
+      },
+      'all': {
+        totalExchanges: 2847,
+        successfulExchanges: 2814,
+        studentSavings: 745200,
+        resourcesReused: 1842,
+        activeListings: 52,
+        activeMembers: 3420,
+        avgTrustScore: 98.6,
+        onTimeRate: 98.6,
+        mostReusedCategory: 'Books & Academics',
+        avgExchangeValue: 261,
+        trendPoints: [
+          { label: '2024', value: 620, savings: 160000 },
+          { label: '2025', value: 940, savings: 245000 },
+          { label: '2026 (YTD)', value: 1287, savings: 340200 }
+        ],
+        categories: [
+          { name: 'Books', pct: 32, count: 911, color: '#10b981' },
+          { name: 'Electronics', pct: 28, count: 797, color: '#38bdf8' },
+          { name: 'Lab Tools', pct: 18, count: 512, color: '#a855f7' },
+          { name: 'Furniture', pct: 14, count: 398, color: '#f59e0b' },
+          { name: 'Sports', pct: 8, count: 229, color: '#ec4899' }
+        ]
+      }
+    };
+
+    // 8-STAGE INTERACTIVE LIFECYCLE MODEL
+    const LIFECYCLE_STAGES = [
+      {
+        id: 1,
+        key: 'REQUESTED',
+        title: 'Requested',
+        whatMeans: 'Borrower has submitted borrowing request with desired duration.',
+        borrowerAction: 'Lock security deposit in smart escrow and review mutual campus borrowing terms.',
+        ownerAction: 'Review borrower verification status, trust score, and accept request.',
+        nextStage: 'Accepted',
+        paymentStatus: 'Payment Pending / Escrow Hold Authorized',
+        safetyInfo: 'Borrower ID verified against college enrollment roll numbers.',
+        expectedAction: 'Owner response within 15 minutes',
+        currentStatus: 'COMPLETED',
+        timestamp: 'Today, 08:30 AM',
+        icon: '📝'
+      },
+      {
+        id: 2,
+        key: 'ACCEPTED',
+        title: 'Accepted',
+        whatMeans: 'Owner confirmed resource availability and agreed to lending period.',
+        borrowerAction: 'Prepare for campus pickup meeting at specified hostel/lab.',
+        ownerAction: 'Prepare gear with accessories and meet at designated handover location.',
+        nextStage: 'Meeting / Pickup',
+        paymentStatus: 'Escrow Locked (100% Refundable Deposit Held)',
+        safetyInfo: 'Location restricted to well-lit campus communal areas.',
+        expectedAction: 'Coordinate pickup time & location',
+        currentStatus: 'COMPLETED',
+        timestamp: 'Today, 08:42 AM',
+        icon: '🤝'
+      },
+      {
+        id: 3,
+        key: 'MEETING',
+        title: 'Meeting / Pickup',
+        whatMeans: 'Parties coordinate offline meeting point or online video coordination based on distance.',
+        borrowerAction: 'Navigate to pickup point (e.g. Central Library Quadrangle) and inspect item.',
+        ownerAction: 'Demonstrate functional operation and provide included accessories.',
+        nextStage: 'Handover & Borrowed',
+        paymentStatus: 'Escrow Secured',
+        safetyInfo: 'Distance-based recommendation (Offline meeting for <2km; video call for >10km).',
+        expectedAction: 'Perform 4-digit OTP exchange',
+        currentStatus: 'ACTIVE',
+        timestamp: 'Today, 09:15 AM',
+        icon: '📍'
+      },
+      {
+        id: 4,
+        key: 'BORROWED',
+        title: 'Borrowed (Active)',
+        whatMeans: 'Handover OTP verified, pre-condition photo logged, usage period running.',
+        borrowerAction: 'Handle with care; follow owner guidelines; return before deadline.',
+        ownerAction: 'Monitor active borrowing countdown on dashboard.',
+        nextStage: 'Return',
+        paymentStatus: 'Escrow Active',
+        safetyInfo: 'Pre-handover photo stored as benchmark condition record.',
+        expectedAction: 'Return before return deadline',
+        currentStatus: 'IN PROGRESS',
+        timestamp: 'Today, 09:17 AM',
+        icon: '⚡'
+      },
+      {
+        id: 5,
+        key: 'RETURN',
+        title: 'Return',
+        whatMeans: 'Borrower marks item as returned at the agreed drop-off point.',
+        borrowerAction: 'Bring item back clean with all accessories included; tap "Mark as Returned".',
+        ownerAction: 'Meet borrower and inspect physical condition.',
+        nextStage: 'Inspection',
+        paymentStatus: 'Refund Pending Inspection',
+        safetyInfo: 'Late return threshold: ₹50/hr overdue fee if returned past deadline.',
+        expectedAction: 'Both parties confirm return',
+        currentStatus: 'PENDING',
+        timestamp: 'Expected Today, 05:00 PM',
+        icon: '🔄'
+      },
+      {
+        id: 6,
+        key: 'INSPECTION',
+        title: 'Inspection',
+        whatMeans: 'Interactive split-photo comparison between pre-handover and post-return conditions.',
+        borrowerAction: 'Verify accessory checklist items (cables, lens, battery).',
+        ownerAction: 'Confirm 100% pristine condition or note cosmetic defect for deposit adjustment.',
+        nextStage: 'Settled',
+        paymentStatus: 'Deposit Refund Calculation',
+        safetyInfo: 'Automated escrow refund if no damage; disputes arbitrated by Admin.',
+        expectedAction: 'Owner signs off inspection pass',
+        currentStatus: 'UPCOMING',
+        timestamp: 'Post-Return',
+        icon: '🔍'
+      },
+      {
+        id: 7,
+        key: 'SETTLED',
+        title: 'Settled',
+        whatMeans: 'Financial escrow payout executed: 100% security deposit credited to borrower wallet.',
+        borrowerAction: 'Receive instant wallet refund credit.',
+        ownerAction: 'Receive borrowing fee payout minus 5% platform maintenance fee.',
+        nextStage: 'Rating',
+        paymentStatus: 'Refund Completed ✓',
+        safetyInfo: 'Bank-grade escrow settlement ledger archived.',
+        expectedAction: 'Rate peer experience',
+        currentStatus: 'UPCOMING',
+        timestamp: 'Post-Inspection',
+        icon: '💰'
+      },
+      {
+        id: 8,
+        key: 'RATING',
+        title: 'Rating & Trust Update',
+        whatMeans: 'Mutual 5-star review updates student trust profile score on campus directory.',
+        borrowerAction: 'Rate owner punctuality and gear condition.',
+        ownerAction: 'Rate borrower item care and return punctuality.',
+        nextStage: 'Complete',
+        paymentStatus: 'Archived',
+        safetyInfo: 'Trust score changes dynamically (e.g. 96 -> 98 Trust).',
+        expectedAction: 'Trust profile badge updated',
+        currentStatus: 'UPCOMING',
+        timestamp: 'Final Step',
+        icon: '⭐'
+      }
+    ];
+
+    // ==========================================
+    // 2. ROOT APP COMPONENT (ALL FEATURES PRESERVED & ENHANCED)
+    // ==========================================
+    function App() {
+      // Views Navigation (All original tabs preserved)
+      const [activeTab, setActiveTab] = useState('explore'); // 'explore' | 'ai' | 'lifecycle' | 'impact' | 'profile' | 'admin' | 'sell'
+      
+      // Catalog State
+      const [products, setProducts] = useState(INITIAL_PRODUCTS);
+      const [selectedCat, setSelectedCat] = useState('all');
+      const [searchQ, setSearchQ] = useState('');
+      const [sortBy, setSortBy] = useState('match');
+      const [maxPrice, setMaxPrice] = useState(50000);
+      const [selectedCondition, setSelectedCondition] = useState('all');
+      
+      // Modals State
+      const [selectedProduct, setSelectedProduct] = useState(null);
+      const [agreementProduct, setAgreementProduct] = useState(null);
+      const [agreementDuration, setAgreementDuration] = useState(4);
+      const [compareList, setCompareList] = useState([]);
+      const [isCompareOpen, setIsCompareOpen] = useState(false);
+      const [isInspectorOpen, setIsInspectorOpen] = useState(false);
+      const [inspectorSlider, setInspectorSlider] = useState(50);
+      const [lifecycleDetailModalStage, setLifecycleDetailModalStage] = useState(null);
+      const [isListResourceModalOpen, setIsListResourceModalOpen] = useState(false);
+      
+      // Owner Connection / Meeting Workflow State
+      const [isOwnerConnectionOpen, setIsOwnerConnectionOpen] = useState(false);
+      const [meetingMethod, setMeetingMethod] = useState('offline'); // 'offline' | 'call' | 'chat'
+      const [meetingLocation, setMeetingLocation] = useState('Central Library Quadrangle');
+      const [meetingTime, setMeetingTime] = useState('Today, 03:30 PM');
+      const [isOnlineCallActive, setIsOnlineCallActive] = useState(false);
+      
+      // User / Wallet / Trust Score
+      const [walletBalance, setWalletBalance] = useState(1850);
+      const [userTrustScore, setUserTrustScore] = useState(98);
+      const [trustScoreReason, setTrustScoreReason] = useState('On-time return + verified student ID');
+      const [platformFeeRate, setPlatformFeeRate] = useState(5); // 5% configurable
+      
+      // Impact Analytics State
+      const [impactPeriod, setImpactPeriod] = useState('all'); // '7d' | '30d' | 'semester' | 'all'
+      const [impactGraphType, setImpactGraphType] = useState('line'); // 'line' | 'bar' | 'pie'
+      const [impactSelectedMetric, setImpactSelectedMetric] = useState('growth'); // 'growth' | 'savings' | 'category'
+
+      // Toast Feedback
+      const [toast, setToast] = useState(null);
+      const triggerToast = (title, msg) => {
+        setToast({ title, msg });
+        setTimeout(() => setToast(null), 4000);
+      };
+
+      // Real AI Camera & Object Detection State (TFJS + COCO-SSD)
+      const videoRef = useRef(null);
+      const canvasOverlayRef = useRef(null);
+      const [isCameraRunning, setIsCameraRunning] = useState(false);
+      const [cameraPermissionError, setCameraPermissionError] = useState(null);
+      const [detectedObject, setDetectedObject] = useState(null);
+      const [detectionConfidence, setDetectionConfidence] = useState(null);
+      const [isModelLoading, setIsModelLoading] = useState(false);
+      const [isDetecting, setIsDetecting] = useState(false);
+      const [capturedImagePreview, setCapturedImagePreview] = useState(null);
+      const [editableListing, setEditableListing] = useState(null);
+      const cocoModelRef = useRef(null);
+
+      // AI Assistant Chat State
+      const [aiMessages, setAiMessages] = useState([
+        { sender: 'ai', text: '👋 Hi Aarav! I am Campus Circular AI. Ask me for equipment recommendations, bundle creation, pricing estimates, or selling assistance!' }
+      ]);
+      const [aiInput, setAiInput] = useState('');
+      const [aiIsTyping, setAiIsTyping] = useState(false);
+
+      // Dynamic Impact Metrics
+      const currentImpactData = IMPACT_HISTORICAL_DATA[impactPeriod] || IMPACT_HISTORICAL_DATA['all'];
+
+      // Filtered Products
+      const filteredProducts = useMemo(() => {
+        return products.filter((p) => {
+          if (selectedCat !== 'all' && p.category !== selectedCat) return false;
+          if (p.price > maxPrice) return false;
+          if (selectedCondition !== 'all') {
+            if (selectedCondition === 'mint' && !p.condition.toLowerCase().includes('mint') && !p.condition.toLowerCase().includes('like new')) return false;
+            if (selectedCondition === 'good' && !p.condition.toLowerCase().includes('good') && !p.condition.toLowerCase().includes('excellent')) return false;
+          }
+          if (searchQ.trim()) {
+            const q = searchQ.toLowerCase();
+            return p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.tags.some(t => t.toLowerCase().includes(q)) || p.location.toLowerCase().includes(q);
+          }
+          return true;
+        }).sort((a, b) => {
+          if (sortBy === 'price-low') return a.price - b.price;
+          if (sortBy === 'price-high') return b.price - a.price;
+          if (sortBy === 'distance') return a.distanceMeters - b.distanceMeters;
+          if (sortBy === 'trust') return b.seller.trustScore - a.seller.trustScore;
+          if (sortBy === 'views') return b.views - a.views;
+          return b.views * b.seller.trustScore - a.views * a.seller.trustScore;
+        });
+      }, [products, selectedCat, searchQ, sortBy, maxPrice, selectedCondition]);
+
+      // Toggle item in comparator
+      const toggleCompare = (id) => {
+        if (compareList.includes(id)) {
+          setCompareList(compareList.filter(x => x !== id));
+        } else {
+          if (compareList.length >= 3) {
+            triggerToast('Compare Limit', 'You can compare up to 3 items side-by-side.');
+            return;
+          }
+          setCompareList([...compareList, id]);
+          triggerToast('Added to Compare', 'Item added to side-by-side comparator.');
+        }
+      };
+
+      // Load TensorFlow / COCO-SSD Model
+      const initDetectionModel = async () => {
+        if (cocoModelRef.current) return cocoModelRef.current;
+        setIsModelLoading(true);
+        try {
+          if (window.cocoSsd) {
+            cocoModelRef.current = await window.cocoSsd.load();
+            setIsModelLoading(false);
+            return cocoModelRef.current;
+          }
+        } catch (e) {
+          console.warn('COCO-SSD load error, fallback active', e);
+        }
+        setIsModelLoading(false);
+        return null;
+      };
+
+      // Start Real Camera
+      const startLiveCamera = async () => {
+        setCameraPermissionError(null);
+        setCapturedImagePreview(null);
+        setDetectedObject(null);
+        setDetectionConfidence(null);
+        setEditableListing(null);
+
+        try {
+          setIsCameraRunning(true);
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
+          });
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play();
+          }
+          await initDetectionModel();
+          setIsDetecting(true);
+        } catch (err) {
+          console.error(err);
+          setCameraPermissionError('Camera permission denied or camera device unavailable.');
+          setIsCameraRunning(false);
+        }
+      };
+
+      // Stop Camera
+      const stopLiveCamera = () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+          const stream = videoRef.current.srcObject;
+          const tracks = stream.getTracks();
+          tracks.forEach(track => track.stop());
+          videoRef.current.srcObject = null;
+        }
+        setIsCameraRunning(false);
+        setIsDetecting(false);
+      };
+
+      // Continuous Object Detection on Video Loop
+      useEffect(() => {
+        let animationFrameId;
+
+        const detectFrame = async () => {
+          if (isDetecting && videoRef.current && videoRef.current.readyState === 4 && cocoModelRef.current && canvasOverlayRef.current) {
+            try {
+              const video = videoRef.current;
+              const canvas = canvasOverlayRef.current;
+              const ctx = canvas.getContext('2d');
+              canvas.width = video.videoWidth || 640;
+              canvas.height = video.videoHeight || 480;
+
+              const predictions = await cocoModelRef.current.detect(video);
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+              if (predictions.length > 0) {
+                predictions.sort((a, b) => b.score - a.score);
+                const best = predictions[0];
+                const [x, y, w, h] = best.bbox;
+
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(x, y, w, h);
+
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+                ctx.fillRect(x, y, w, h);
+
+                ctx.fillStyle = '#10b981';
+                ctx.font = 'bold 15px Manrope, sans-serif';
+                ctx.fillText(`${best.class.toUpperCase()} ${Math.round(best.score * 100)}%`, x + 8, y > 24 ? y - 8 : y + 20);
+
+                setDetectedObject(best.class);
+                setDetectionConfidence(Math.round(best.score * 100));
+              }
+            } catch (err) {}
+          }
+          if (isDetecting) {
+            animationFrameId = requestAnimationFrame(detectFrame);
+          }
+        };
+
+        if (isDetecting) {
+          animationFrameId = requestAnimationFrame(detectFrame);
+        }
+
+        return () => cancelAnimationFrame(animationFrameId);
+      }, [isDetecting]);
+
+      // Capture Snapshot & Build Editable Listing
+      const captureFrameAndIdentify = () => {
+        let imageUri = 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80';
+        
+        if (videoRef.current) {
+          const video = videoRef.current;
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth || 640;
+          canvas.height = video.videoHeight || 480;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          try {
+            imageUri = canvas.toDataURL('image/jpeg');
+          } catch(e) {}
+        }
+        
+        setCapturedImagePreview(imageUri);
+        stopLiveCamera();
+
+        const detectedName = detectedObject ? (detectedObject.charAt(0).toUpperCase() + detectedObject.slice(1)) : 'Campus Resource';
+        const initialListing = {
+          name: `${detectedName} (Verified Student Gear)`,
+          category: 'electronics',
+          condition: 'Like New (9.5/10)',
+          description: `Detected ${detectedName} in good physical condition. Tested and available for student borrow.`,
+          price: 1800,
+          hourlyRate: 20,
+          dailyRate: 60,
+          securityDeposit: 300,
+          tags: 'campus, verified, student, gear',
+          location: 'Hostel 3, Room 214',
+          image: imageUri,
+          confidence: detectionConfidence || 94
+        };
+
+        setEditableListing(initialListing);
+        triggerToast('Object Identified', `Detected ${detectedName} (${detectionConfidence || 94}% confidence). Review details below.`);
+      };
+
+      // Publish Final Listing
+      const handlePublishFinalListing = (e) => {
+        e.preventDefault();
+        if (!editableListing) return;
+
+        const newP = {
+          id: 'p-' + Date.now(),
+          title: editableListing.name,
+          category: editableListing.category,
+          description: editableListing.description,
+          price: Number(editableListing.price),
+          hourlyRate: Number(editableListing.hourlyRate),
+          dailyRate: Number(editableListing.dailyRate),
+          securityDeposit: Number(editableListing.securityDeposit),
+          condition: editableListing.condition,
+          image: editableListing.image,
+          seller: { name: 'Aarav Sharma', dept: 'Computer Engg, Year 3', trustScore: userTrustScore, avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80', verified: true },
+          location: editableListing.location || 'Hostel 3, Room 214',
+          distanceMeters: 120,
+          walkTimeMinutes: 2,
+          tags: editableListing.tags.split(',').map(t => t.trim()),
+          views: 1,
+          likes: 0,
+          status: 'active'
+        };
+
+        setProducts([newP, ...products]);
+        setCapturedImagePreview(null);
+        setEditableListing(null);
+        setActiveTab('explore');
+        triggerToast('Resource Published!', 'Your listing is now live across the campus network!');
+      };
+
+      // AI Chat Send
+      const handleAiSend = (queryText) => {
+        const text = queryText || aiInput;
+        if (!text.trim()) return;
+
+        const newMsg = { sender: 'user', text };
+        setAiMessages(prev => [...prev, newMsg]);
+        setAiInput('');
+        setAiIsTyping(true);
+
+        setTimeout(() => {
+          let reply = '';
+          const q = text.toLowerCase();
+          if (q.includes('laptop') || q.includes('macbook')) {
+            reply = '💻 I recommend the **MacBook Pro 16" M2** in Computer Lab 4 (32GB RAM) for ₹80/hr, or check the **Dell 24" UltraSharp IPS Monitor** for dual-screen hostel work!';
+          } else if (q.includes('calculator') || q.includes('exam')) {
+            reply = '⚡ For exams, the **Casio FX-991CW ClassWiz** is available right at the Central Library Ground Floor Desk (50m away) for ₹10/hr with 100% exam approval!';
+          } else if (q.includes('reel') || q.includes('video') || q.includes('creator')) {
+            reply = '🎬 **Recommended Creator Bundle (20% Savings)**:\n• Canon EOS 80D DSLR Kit (₹60/hr)\n• Godox Studio Softbox Lighting (₹20/hr)\n• Boya Wireless Lapel Mic (₹15/hr)\nTotal: ₹76/hr (Discount applied!). Would you like to lock this bundle?';
+          } else if (q.includes('impact') || q.includes('saved')) {
+            reply = '🌱 Our campus circular economy has given **2,847 items a second life**, saving students over **₹7.45 Lakhs** and diverting 920 kg of e-waste from landfills!';
+          } else {
+            reply = `✨ I analyzed your goal: "${text}". The campus directory currently has ${products.length} verified student resources protected by smart escrow. What category would you like to explore?`;
+          }
+
+          setAiMessages(prev => [...prev, { sender: 'ai', text: reply }]);
+          setAiIsTyping(false);
+        }, 700);
+      };
+
+      // Execute Borrow & Open Connection Coordinator
+      const handleConfirmBorrow = () => {
+        if (!agreementProduct) return;
+        const borrowingFee = agreementProduct.hourlyRate * agreementDuration;
+        const platformFee = Math.round(borrowingFee * (platformFeeRate / 100));
+        const totalPayable = borrowingFee + platformFee + agreementProduct.securityDeposit;
+
+        if (walletBalance < totalPayable) {
+          triggerToast('Low Escrow Balance', `Required ₹${totalPayable}. Tap "+ Add Funds" to top up.`);
+          return;
+        }
+
+        setWalletBalance(prev => prev - totalPayable);
+        setAgreementProduct(null);
+        setSelectedProduct(null);
+        setIsOwnerConnectionOpen(true);
+        triggerToast('Escrow Locked & Payment Complete', `₹${totalPayable} locked in smart escrow. Next: Connect with owner!`);
+      };
+
+      // Owner Connection Confirmation Handlers
+      const handleConfirmMeeting = () => {
+        setIsOwnerConnectionOpen(false);
+        setActiveTab('lifecycle');
+        triggerToast('Exchange Meeting Scheduled', `Confirmed meetup with ${agreementProduct ? agreementProduct.seller.name : 'Owner'} at ${meetingLocation}!`);
+      };
+
+      const handleConfirmHandover = () => {
+        setUserTrustScore(prev => Math.min(100, prev + 1));
+        setTrustScoreReason('Confirmed peer item handover + OTP match');
+        triggerToast('Handover Completed', 'Both parties verified OTP. Active borrowing countdown started!');
+      };
+
+      const handleConfirmReturnAndRefund = () => {
+        setUserTrustScore(prev => Math.min(100, prev + 1));
+        setTrustScoreReason('Punctual on-time return + passed condition inspection');
+        setWalletBalance(prev => prev + 1000);
+        setIsInspectorOpen(false);
+        triggerToast('100% Deposit Refunded', 'Inspection passed! ₹1,000 security deposit refunded to your wallet.');
+      };
+
+      return (
+        <div className="min-h-screen bg-black text-white flex flex-col font-sans">
+          
+          {/* ==========================================
+              TOP NAVBAR (ORIGINAL WITH LIVING ORGANIC LOGO)
+              ========================================== */}
+          <header className="sticky top-0 z-40 w-full bg-black/90 border-b border-neutral-800/90 backdrop-blur-xl px-4 sm:px-8 py-3 flex items-center justify-between">
+            
+            {/* Living Breathing Organic Brand Logo */}
+            <div
+              className="flex items-center gap-3 cursor-pointer group"
+              onClick={() => setActiveTab('explore')}
+            >
+              <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-400 p-[1.5px] shadow-lg shadow-emerald-500/25 living-logo-glow">
+                <div className="w-full h-full bg-neutral-950 rounded-[14px] flex items-center justify-center relative overflow-hidden">
+                  <span className="text-xl font-black text-emerald-400 group-hover:scale-110 transition-transform">
+                    ↻
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/20 to-transparent pointer-events-none" />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-1.5 font-extrabold text-base tracking-tight text-white group-hover:text-emerald-400 transition-colors">
+                  <span>Campus Circular</span>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                    Ecosystem
+                  </span>
+                </div>
+                <p className="text-[11px] text-neutral-400 hidden sm:block">From Ownership to Access</p>
+              </div>
+            </div>
+
+            {/* Navigation Tabs */}
+            <nav className="hidden lg:flex items-center gap-1 bg-neutral-950/90 p-1.5 rounded-2xl border border-neutral-800/90">
+              {[
+                { id: 'explore', label: 'Directory', icon: '🛍️' },
+                { id: 'sell', label: 'AI Camera Sell', icon: '📸', highlight: true },
+                { id: 'ai', label: 'Ask AI', icon: '✨' },
+                { id: 'lifecycle', label: 'Lifecycle (8 Stages)', icon: '🔄' },
+                { id: 'impact', label: 'Impact', icon: '🌱' },
+                { id: 'profile', label: 'Trust Profile', icon: '🛡️' },
+                { id: 'admin', label: 'Admin Hub', icon: '⚡' }
+              ].map((n) => (
+                <button
+                  key={n.id}
+                  onClick={() => setActiveTab(n.id)}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    activeTab === n.id
+                      ? 'bg-neutral-800 text-white shadow-sm border border-neutral-700'
+                      : n.highlight
+                      ? 'text-emerald-400 hover:bg-emerald-500/10'
+                      : 'text-neutral-400 hover:text-white hover:bg-neutral-900/60'
+                  }`}
+                >
+                  <span>{n.icon}</span>
+                  <span>{n.label}</span>
+                </button>
+              ))}
+            </nav>
+
+            {/* Right Action Bar */}
+            <div className="flex items-center gap-3">
+              
+              {/* Escrow Wallet Pill */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs">
+                <span className="text-[10px] text-neutral-400 uppercase font-semibold">Escrow:</span>
+                <span className="font-extrabold text-emerald-400">₹{walletBalance.toLocaleString()}</span>
+                <button
+                  onClick={() => {
+                    setWalletBalance(prev => prev + 1000);
+                    triggerToast('Funds Deposited', '₹1,000 added to your Escrow Wallet.');
+                  }}
+                  className="text-[10px] bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-2 py-0.5 rounded-lg transition-all"
+                >
+                  + Add
+                </button>
+              </div>
+
+              {/* User Profile Pill */}
+              <div
+                onClick={() => setActiveTab('profile')}
+                className="flex items-center gap-2 p-1.5 pr-3 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-xl cursor-pointer transition-all"
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80"
+                  alt="Aarav"
+                  className="w-7 h-7 rounded-lg object-cover border border-neutral-700"
+                />
+                <div className="hidden sm:block text-left text-[11px] leading-tight">
+                  <div className="font-bold text-white flex items-center gap-1">
+                    <span>Aarav</span>
+                    <span className="text-emerald-400 text-[10px]">✓</span>
+                  </div>
+                  <span className="text-neutral-400">{userTrustScore}% Trust</span>
+                </div>
+              </div>
+
+              {/* List Resource Button */}
+              <button
+                onClick={() => setActiveTab('sell')}
+                className="hidden sm:flex items-center gap-1.5 py-1.5 px-3.5 bg-white hover:bg-neutral-200 text-black font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95"
+              >
+                <span>+ List Gear</span>
+              </button>
+
+            </div>
+
+          </header>
+
+          {/* Mobile Bottom Navigation */}
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-neutral-950/95 border-t border-neutral-800 px-3 py-2 flex items-center justify-around text-[10px] font-bold">
+            <button onClick={() => setActiveTab('explore')} className={`p-1 flex flex-col items-center ${activeTab === 'explore' ? 'text-emerald-400' : 'text-neutral-400'}`}>
+              <span>🛍️</span><span>Directory</span>
+            </button>
+            <button onClick={() => setActiveTab('sell')} className={`p-1 flex flex-col items-center ${activeTab === 'sell' ? 'text-emerald-400' : 'text-neutral-400'}`}>
+              <span>📸</span><span>AI Sell</span>
+            </button>
+            <button onClick={() => setActiveTab('ai')} className={`p-1 flex flex-col items-center ${activeTab === 'ai' ? 'text-emerald-400' : 'text-neutral-400'}`}>
+              <span>✨</span><span>Ask AI</span>
+            </button>
+            <button onClick={() => setActiveTab('lifecycle')} className={`p-1 flex flex-col items-center ${activeTab === 'lifecycle' ? 'text-emerald-400' : 'text-neutral-400'}`}>
+              <span>🔄</span><span>Lifecycle</span>
+            </button>
+            <button onClick={() => setActiveTab('profile')} className={`p-1 flex flex-col items-center ${activeTab === 'profile' ? 'text-emerald-400' : 'text-neutral-400'}`}>
+              <span>🛡️</span><span>Profile</span>
+            </button>
+          </div>
+
+          {/* ==========================================
+              MAIN CONTENT VIEWS
+              ========================================== */}
+          <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-8 py-6 mb-16 lg:mb-6">
+            
+            {/* VIEW 1: EXPLORE DIRECTORY (HERO + GRID) */}
+            {activeTab === 'explore' && (
+              <div className="space-y-8 animate-fadeSlideUp">
+                
+                {/* Hero */}
+                <div className="relative text-center py-10 sm:py-14 rounded-3xl bg-gradient-to-b from-neutral-900/90 via-neutral-950 to-black border border-neutral-800 px-4 overflow-hidden">
+                  <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                  
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-4">
+                    <span>🌱 Circular Campus Economy • 52 Verified Resources</span>
+                  </div>
+                  
+                  <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white max-w-4xl mx-auto leading-tight">
+                    Why buy what someone nearby <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">already has?</span>
+                  </h1>
+                  
+                  <p className="text-xs sm:text-sm text-neutral-300 max-w-2xl mx-auto mt-3 leading-relaxed">
+                    Discover textbooks, DSLR cameras, lab oscilloscopes, guitars, drafters, monitors, and hostel appliances right in your college quadrangle.
+                  </p>
+
+                  {/* Search Bar with AI Search Action */}
+                  <div className="mt-7 max-w-2xl mx-auto flex items-center p-2 rounded-2xl bg-neutral-900/95 border border-neutral-700/80 shadow-2xl focus-within:border-emerald-500">
+                    <span className="text-neutral-400 px-2 text-sm">🔍</span>
+                    <input
+                      type="text"
+                      value={searchQ}
+                      onChange={(e) => setSearchQ(e.target.value)}
+                      placeholder="Search books, cameras, calculators, lab gear, hostel appliances..."
+                      className="w-full px-2 py-2 bg-transparent text-xs sm:text-sm text-white placeholder-neutral-500 focus:outline-none"
+                    />
+                    <button
+                      onClick={() => {
+                        if (searchQ) handleAiSend(searchQ);
+                        setActiveTab('ai');
+                      }}
+                      className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black font-extrabold text-xs shrink-0 shadow-md shadow-emerald-500/20 active:scale-95 transition-all"
+                    >
+                      Ask AI Search
+                    </button>
+                  </div>
+                </div>
+
+                {/* Category Navigation Strip */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                  {CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCat(cat.id)}
+                      className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
+                        selectedCat === cat.id
+                          ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/25 scale-[1.02]'
+                          : 'bg-neutral-900/90 border border-neutral-800 text-neutral-300 hover:text-white hover:border-neutral-700'
+                      }`}
+                    >
+                      <span>{cat.icon}</span>
+                      <span>{cat.name}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Filter & Sorting Controls */}
+                <div className="p-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 flex flex-wrap items-center justify-between gap-4 text-xs">
+                  <div className="flex items-center gap-3">
+                    <span className="text-neutral-400">Showing <strong className="text-white">{filteredProducts.length}</strong> items</span>
+                    <span className="text-neutral-600">|</span>
+                    <label className="flex items-center gap-1.5 text-neutral-300">
+                      <span>Condition:</span>
+                      <select
+                        value={selectedCondition}
+                        onChange={(e) => setSelectedCondition(e.target.value)}
+                        className="bg-neutral-950 border border-neutral-800 rounded-lg px-2 py-1 text-white font-semibold focus:outline-none"
+                      >
+                        <option value="all">All Conditions</option>
+                        <option value="mint">Mint / Like New</option>
+                        <option value="good">Good / Excellent</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-1.5 text-neutral-300">
+                      <span>Sort By:</span>
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="bg-neutral-950 border border-neutral-800 rounded-lg px-2 py-1 text-emerald-400 font-bold focus:outline-none"
+                      >
+                        <option value="match">✨ Best AI Match</option>
+                        <option value="distance">📍 Nearest Proximity</option>
+                        <option value="price-low">💰 Price: Low to High</option>
+                        <option value="price-high">💎 Price: High to Low</option>
+                        <option value="trust">🛡️ Highest Seller Trust</option>
+                        <option value="views">🔥 Most Popular</option>
+                      </select>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Product Catalog Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {filteredProducts.map((p) => (
+                    <div
+                      key={p.id}
+                      onClick={() => setSelectedProduct(p)}
+                      className="group rounded-3xl bg-neutral-900/80 hover:bg-neutral-900 border border-neutral-800 hover:border-emerald-500/50 transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-xl cursor-pointer"
+                    >
+                      <div>
+                        {/* Image */}
+                        <div className="relative h-48 w-full overflow-hidden bg-neutral-950">
+                          <img
+                            src={p.image}
+                            alt={p.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-md text-[10px] font-bold text-emerald-400 border border-emerald-500/30">
+                            {p.condition}
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleCompare(p.id);
+                            }}
+                            className={`absolute top-3 right-3 px-2.5 py-1 rounded-lg text-[10px] font-bold backdrop-blur-md transition-all border ${
+                              compareList.includes(p.id)
+                                ? 'bg-emerald-500 text-black border-emerald-400 shadow-md'
+                                : 'bg-black/70 text-neutral-300 border-neutral-700 hover:text-white'
+                            }`}
+                          >
+                            {compareList.includes(p.id) ? '✓ Comparing' : '+ Compare'}
+                          </button>
+                          <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-md text-[10px] text-neutral-200 flex items-center gap-1">
+                            <span>📍 {p.distanceMeters}m ({p.walkTimeMinutes} min walk)</span>
+                          </div>
+                        </div>
+
+                        {/* Details */}
+                        <div className="p-4">
+                          <h3 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
+                            {p.title}
+                          </h3>
+                          <p className="text-xs text-neutral-400 mt-1 line-clamp-2 leading-relaxed">
+                            {p.description}
+                          </p>
+
+                          {/* Seller Info */}
+                          <div className="mt-3.5 pt-2.5 border-t border-neutral-800 flex items-center justify-between text-[11px]">
+                            <div className="flex items-center gap-1.5">
+                              <img src={p.seller.avatar} alt="seller" className="w-5 h-5 rounded-full object-cover" />
+                              <span className="text-neutral-300 truncate max-w-[120px]">{p.seller.name}</span>
+                            </div>
+                            <span className="text-emerald-400 font-semibold">{p.seller.trustScore}% Trust ✓</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Pricing & CTA */}
+                      <div className="p-4 pt-0 border-t border-neutral-800/80 bg-neutral-950/40">
+                        <div className="flex items-center justify-between my-2.5 text-xs">
+                          <div>
+                            <span className="text-base font-extrabold text-white">₹{p.hourlyRate}/hr</span>
+                            <span className="text-[10px] text-neutral-400 block">Buy: ₹{p.price.toLocaleString()}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] text-neutral-400 uppercase block">Deposit Escrow</span>
+                            <span className="font-bold text-emerald-400">₹{p.securityDeposit}</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedProduct(p);
+                            }}
+                            className="py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-semibold text-xs rounded-xl transition-colors"
+                          >
+                            Details
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAgreementProduct(p);
+                            }}
+                            className="py-2 bg-white hover:bg-neutral-200 text-black font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95"
+                          >
+                            Borrow Now
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+              </div>
+            )}
+
+            {/* VIEW 2: SELL WITH AI CAMERA (OBJECT DETECTION + AUTO LISTING) */}
+            {activeTab === 'sell' && (
+              <div className="max-w-3xl mx-auto space-y-8 animate-fadeSlideUp">
+                
+                <div className="p-6 sm:p-8 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+                    <span>📸 AI Camera Object Detection & Auto-Listing Engine</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-white">Point Camera & Sell Campus Gear</h2>
+                  <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
+                    Runs real-time in-browser computer vision object detection (TensorFlow COCO-SSD). Detects laptops, books, calculators, phones, sports gear, and tools with live bounding boxes.
+                  </p>
+                </div>
+
+                {/* Live Camera Viewport with Real-Time Bounding Box Overlay */}
+                <div className="p-6 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-6">
+                  
+                  <div className="relative h-72 sm:h-96 w-full rounded-2xl overflow-hidden bg-black border border-neutral-700 flex items-center justify-center">
+                    
+                    {/* Live Video Feed */}
+                    <video
+                      ref={videoRef}
+                      className={`w-full h-full object-cover ${isCameraRunning ? 'block' : 'hidden'}`}
+                      autoPlay
+                      playsInline
+                      muted
+                    />
+
+                    {/* Real-time Bounding Box Canvas Overlay */}
+                    <canvas
+                      ref={canvasOverlayRef}
+                      className={`absolute inset-0 w-full h-full pointer-events-none ${isCameraRunning ? 'block' : 'hidden'}`}
+                    />
+
+                    {/* Captured Image Preview if frozen */}
+                    {capturedImagePreview && !isCameraRunning && (
+                      <img src={capturedImagePreview} alt="Captured" className="w-full h-full object-cover" />
+                    )}
+
+                    {/* Initial State / Permission Error UI */}
+                    {!isCameraRunning && !capturedImagePreview && (
+                      <div className="text-center p-6 space-y-3">
+                        <div className="w-16 h-16 rounded-2xl bg-neutral-800 flex items-center justify-center text-3xl mx-auto">
+                          📸
+                        </div>
+                        <h4 className="text-sm font-bold text-white">Browser Camera Vision Ready</h4>
+                        <p className="text-xs text-neutral-400 max-w-sm">
+                          {cameraPermissionError || 'Click below to grant camera permission and detect objects in real time.'}
+                        </p>
+                        <button
+                          onClick={startLiveCamera}
+                          className="py-2.5 px-6 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95"
+                        >
+                          Open Live Camera & Start Detector
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Real-time Detection Status Pill Overlay */}
+                    {isCameraRunning && (
+                      <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/80 backdrop-blur-md border border-neutral-700 text-xs">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>
+                          {isModelLoading ? 'Loading AI Model...' : detectedObject ? `Detected: ${detectedObject} (${detectionConfidence}%)` : 'Scanning frame for objects...'}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Controls Toolbar */}
+                    {isCameraRunning && (
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4">
+                        <button
+                          onClick={stopLiveCamera}
+                          className="px-4 py-2 bg-neutral-900/90 text-neutral-300 hover:text-white rounded-xl text-xs font-semibold backdrop-blur-md border border-neutral-700"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={captureFrameAndIdentify}
+                          className="w-14 h-14 rounded-full bg-white border-4 border-emerald-500 shadow-2xl flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition-all"
+                          title="Capture Object"
+                        >
+                          📷
+                        </button>
+                      </div>
+                    )}
+
+                  </div>
+
+                  {/* Confidence Feedback Warning if low */}
+                  {detectionConfidence !== null && detectionConfidence < 60 && (
+                    <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-400 flex items-center justify-between">
+                      <span>⚠️ Object detected, but identification confidence is low ({detectionConfidence}%). Adjust angle or lighting.</span>
+                      <button onClick={startLiveCamera} className="font-bold underline ml-2">Try Again</button>
+                    </div>
+                  )}
+
+                  {/* Auto-Populated & Fully Editable Listing Form */}
+                  {editableListing && (
+                    <form onSubmit={handlePublishFinalListing} className="p-6 rounded-3xl bg-neutral-950 border border-emerald-500/40 space-y-4 animate-fadeSlideUp">
+                      
+                      <div className="flex justify-between items-start border-b border-neutral-800 pb-3">
+                        <div>
+                          <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                            AI Detected • {editableListing.confidence}% Confidence
+                          </span>
+                          <h3 className="text-base font-extrabold text-white">Review & Edit Generated Listing</h3>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={startLiveCamera}
+                          className="py-1.5 px-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-semibold rounded-lg"
+                        >
+                          Scan Again 🔄
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-neutral-300 mb-1">Object Name *</label>
+                          <input
+                            type="text"
+                            value={editableListing.name}
+                            onChange={(e) => setEditableListing({ ...editableListing, name: e.target.value })}
+                            className="w-full px-3.5 py-2.5 bg-neutral-900 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-neutral-300 mb-1">Category *</label>
+                          <select
+                            value={editableListing.category}
+                            onChange={(e) => setEditableListing({ ...editableListing, category: e.target.value })}
+                            className="w-full px-3.5 py-2.5 bg-neutral-900 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+                          >
+                            <option value="electronics">Electronics & Gadgets</option>
+                            <option value="books">Books & Study</option>
+                            <option value="lab">Lab & Engineering</option>
+                            <option value="stationery">Stationery & Drafters</option>
+                            <option value="furniture">Hostel Furniture</option>
+                            <option value="clothing">Clothing & Lab Coats</option>
+                            <option value="sports">Sports & Fitness</option>
+                            <option value="bags">Bags & Backpacks</option>
+                            <option value="hostel">Hostel Essentials</option>
+                            <option value="art">Art & Creative</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-neutral-300 mb-1">AI Generated Description *</label>
+                        <textarea
+                          rows="3"
+                          value={editableListing.description}
+                          onChange={(e) => setEditableListing({ ...editableListing, description: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-neutral-900 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 resize-none"
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-neutral-300 mb-1">Hourly (₹)</label>
+                          <input
+                            type="number"
+                            value={editableListing.hourlyRate}
+                            onChange={(e) => setEditableListing({ ...editableListing, hourlyRate: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-xl text-xs text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-neutral-300 mb-1">Selling Value (₹)</label>
+                          <input
+                            type="number"
+                            value={editableListing.price}
+                            onChange={(e) => setEditableListing({ ...editableListing, price: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-xl text-xs text-white font-bold text-emerald-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-neutral-300 mb-1">Deposit Escrow (₹)</label>
+                          <input
+                            type="number"
+                            value={editableListing.securityDeposit}
+                            onChange={(e) => setEditableListing({ ...editableListing, securityDeposit: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-xl text-xs text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-neutral-300 mb-1">Condition</label>
+                          <input
+                            type="text"
+                            value={editableListing.condition}
+                            onChange={(e) => setEditableListing({ ...editableListing, condition: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-xl text-xs text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-neutral-300 mb-1">Tags</label>
+                          <input
+                            type="text"
+                            value={editableListing.tags}
+                            onChange={(e) => setEditableListing({ ...editableListing, tags: e.target.value })}
+                            className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-xl text-xs text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs rounded-xl shadow-lg shadow-emerald-500/25 active:scale-95"
+                      >
+                        Publish Verified Resource to Campus Directory 🚀
+                      </button>
+
+                    </form>
+                  )}
+
+                </div>
+
+              </div>
+            )}
+
+            {/* VIEW 3: ASK CAMPUS AI ASSISTANT */}
+            {activeTab === 'ai' && (
+              <div className="max-w-4xl mx-auto space-y-6 animate-fadeSlideUp">
+                
+                <div className="p-6 rounded-3xl bg-gradient-to-r from-neutral-900 via-neutral-950 to-neutral-900 border border-emerald-500/30 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-xl text-emerald-400">
+                      ✨
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-extrabold text-white">Campus Circular AI Concierge</h2>
+                      <p className="text-xs text-neutral-400">Autonomous Product Discovery, Valuation & Bundle Intelligence</p>
+                    </div>
+                  </div>
+                  <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-full border border-emerald-500/30">
+                    Model v2.4 Live
+                  </span>
+                </div>
+
+                {/* Quick Prompts */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {[
+                    { label: '💻 Laptop for Blender 3D', query: 'I need a high spec laptop for 3D Blender rendering' },
+                    { label: '⚡ Casio Exam Calculator', query: 'Find an exam approved Casio calculator near library' },
+                    { label: '🎥 Event Reel Bundle', query: 'I need to make a reel for my club event tomorrow' },
+                    { label: '🏷️ Price My Old Textbooks', query: 'How much can I sell my B.S. Grewal mathematics book for?' },
+                    { label: '⚖️ Compare DSLR vs Mirrorless', query: 'Compare Canon 80D with Sony A6400' },
+                    { label: '🌱 Show Campus Impact Stats', query: 'How much money has our college saved this semester?' }
+                  ].map((chip, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleAiSend(chip.query)}
+                      className="p-2.5 rounded-xl bg-neutral-900/90 border border-neutral-800 hover:border-emerald-500/50 text-left text-xs text-neutral-300 hover:text-white transition-all truncate"
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Chat History Stream */}
+                <div className="p-6 rounded-3xl bg-neutral-900 border border-neutral-800 min-h-[380px] max-h-[500px] overflow-y-auto space-y-4">
+                  {aiMessages.map((m, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[85%] p-4 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-line ${
+                          m.sender === 'user'
+                            ? 'bg-emerald-500 text-black font-semibold rounded-tr-none'
+                            : 'bg-neutral-950 border border-neutral-800 text-neutral-200 rounded-tl-none'
+                        }`}
+                      >
+                        {m.text}
+                      </div>
+                    </div>
+                  ))}
+
+                  {aiIsTyping && (
+                    <div className="flex justify-start">
+                      <div className="p-3 bg-neutral-950 border border-neutral-800 rounded-2xl text-xs text-emerald-400 animate-pulse">
+                        ✨ AI is analyzing catalog and calculating recommendations...
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Chat Input */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleAiSend();
+                  }}
+                  className="flex items-center gap-2 p-2 rounded-2xl bg-neutral-900 border border-neutral-700 focus-within:border-emerald-500"
+                >
+                  <input
+                    type="text"
+                    value={aiInput}
+                    onChange={(e) => setAiInput(e.target.value)}
+                    placeholder="Ask AI anything (e.g. Find me a microphone or analyze my seller listing)..."
+                    className="w-full px-3 py-2 bg-transparent text-xs sm:text-sm text-white placeholder-neutral-500 focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    className="py-2.5 px-5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs rounded-xl shadow-md shrink-0"
+                  >
+                    Send
+                  </button>
+                </form>
+
+              </div>
+            )}
+
+            {/* VIEW 4: DEDICATED 8-STAGE INTERACTIVE LIFECYCLE */}
+            {activeTab === 'lifecycle' && (
+              <div className="space-y-8 animate-fadeSlideUp">
+                
+                <div className="p-6 sm:p-8 rounded-3xl bg-neutral-900 border border-neutral-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-3">
+                      <span>🔄 Circular Product Journey Engine</span>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-black text-white">Interactive Borrowing & Reuse Lifecycle</h2>
+                    <p className="text-xs sm:text-sm text-neutral-300 mt-1 max-w-2xl leading-relaxed">
+                      Tap any stage below to inspect detailed borrower actions, owner obligations, escrow payment status, safety protocols, and automated deposit refund workflows.
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 text-right shrink-0">
+                    <span className="text-[10px] text-neutral-400 block uppercase font-semibold">Active Cycle Progress</span>
+                    <span className="text-2xl font-black text-emerald-400">Stage 3 of 8</span>
+                    <span className="text-[10px] text-neutral-500">Meeting & Handover Verification</span>
+                  </div>
+                </div>
+
+                {/* 8-Stage Interactive Progression Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {LIFECYCLE_STAGES.map((stage) => (
+                    <div
+                      key={stage.id}
+                      onClick={() => setLifecycleDetailModalStage(stage)}
+                      className={`p-5 rounded-3xl border transition-all flex flex-col justify-between space-y-4 cursor-pointer group shadow-xl ${
+                        stage.id === 3
+                          ? 'bg-neutral-900 border-emerald-500/80 ring-2 ring-emerald-500/20'
+                          : 'bg-neutral-900/90 hover:bg-neutral-900 border-neutral-800 hover:border-emerald-500/60'
+                      }`}
+                    >
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="w-10 h-10 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                            {stage.icon}
+                          </div>
+                          <span className="text-[10px] font-black font-mono text-emerald-400">STAGE 0{stage.id}</span>
+                        </div>
+
+                        <h3 className="text-sm font-extrabold text-white group-hover:text-emerald-400 transition-colors">
+                          {stage.title}
+                        </h3>
+                        <p className="text-xs text-neutral-400 leading-snug">{stage.whatMeans}</p>
+                      </div>
+
+                      <div className="pt-3 border-t border-neutral-800/80 space-y-1 text-[11px]">
+                        <div className="text-neutral-300 truncate">
+                          <strong className="text-neutral-400 block text-[10px] uppercase">Borrower:</strong>
+                          <span className="truncate">{stage.borrowerAction}</span>
+                        </div>
+                        <div className="text-emerald-400 font-semibold pt-1 flex items-center justify-between">
+                          <span>{stage.currentStatus}</span>
+                          <span className="text-[10px] underline text-neutral-400 group-hover:text-emerald-300">View Info →</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Handover & Condition Inspection Workbench */}
+                <div className="p-6 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Stage 3 & 4 Simulation: Handover Verification</span>
+                        <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">OTP: 4829</span>
+                      </h4>
+                      <p className="text-xs text-neutral-400 mt-1">
+                        Meet owner at <strong>Hostel 3 Entrance / Central Library</strong>. Exchange OTP and record condition photo.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleConfirmHandover}
+                        className="py-2.5 px-4 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-xl shadow-md"
+                      >
+                        ✓ Confirm Handover (OTP Match)
+                      </button>
+                      <button
+                        onClick={() => setIsInspectorOpen(true)}
+                        className="py-2.5 px-4 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs rounded-xl"
+                      >
+                        🔍 Open Condition Slider
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* VIEW 5: CAMPUS IMPACT DASHBOARD */}
+            {activeTab === 'impact' && (
+              <div className="space-y-8 animate-fadeSlideUp">
+                
+                {/* Headline Banner with Period Switcher */}
+                <div className="p-6 sm:p-8 rounded-3xl bg-neutral-900 border border-emerald-500/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                  <div>
+                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block mb-1">
+                      Verified Campus Sustainability & Reuse Analytics
+                    </span>
+                    <h2 className="text-2xl sm:text-4xl font-black text-white">
+                      “Our campus community has given <span className="text-emerald-400">{currentImpactData.totalExchanges.toLocaleString()} items</span> a second life.”
+                    </h2>
+                    <p className="text-xs sm:text-sm text-neutral-300 mt-1">
+                      Dynamically aggregated across {currentImpactData.activeMembers} verified students and 8 engineering departments.
+                    </p>
+                  </div>
+
+                  {/* 4-Option Period Selector */}
+                  <div className="flex items-center gap-1 bg-neutral-950 p-1 rounded-xl border border-neutral-800 shrink-0">
+                    {[
+                      { id: '7d', label: 'This Week' },
+                      { id: '30d', label: 'This Month' },
+                      { id: 'semester', label: 'Semester' },
+                      { id: 'all', label: 'All Time' }
+                    ].map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => setImpactPeriod(t.id)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          impactPeriod === t.id ? 'bg-emerald-500 text-black shadow-md' : 'text-neutral-400 hover:text-white'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Dynamic Headline KPI Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-5 rounded-3xl bg-neutral-900 border border-neutral-800">
+                    <span className="text-xs text-neutral-400 font-semibold block">Total Student Savings</span>
+                    <div className="text-2xl sm:text-3xl font-black text-emerald-400 mt-1">
+                      ₹{currentImpactData.studentSavings.toLocaleString()}
+                    </div>
+                    <span className="text-[10px] text-neutral-500 mt-1 block">Period: {impactPeriod.toUpperCase()}</span>
+                  </div>
+
+                  <div className="p-5 rounded-3xl bg-neutral-900 border border-neutral-800">
+                    <span className="text-xs text-neutral-400 font-semibold block">Total Exchanges</span>
+                    <div className="text-2xl sm:text-3xl font-black text-white mt-1">
+                      {currentImpactData.totalExchanges}
+                    </div>
+                    <span className="text-[10px] text-emerald-400 mt-1 block">✓ {currentImpactData.successfulExchanges} Successful</span>
+                  </div>
+
+                  <div className="p-5 rounded-3xl bg-neutral-900 border border-neutral-800">
+                    <span className="text-xs text-neutral-400 font-semibold block">Resources Reused</span>
+                    <div className="text-2xl sm:text-3xl font-black text-teal-400 mt-1">
+                      {currentImpactData.resourcesReused} Units
+                    </div>
+                    <span className="text-[10px] text-neutral-500 mt-1 block">Active circulation</span>
+                  </div>
+
+                  <div className="p-5 rounded-3xl bg-neutral-900 border border-neutral-800">
+                    <span className="text-xs text-neutral-400 font-semibold block">On-Time Return Rate</span>
+                    <div className="text-2xl sm:text-3xl font-black text-cyan-400 mt-1">
+                      {currentImpactData.onTimeRate}%
+                    </div>
+                    <span className="text-[10px] text-neutral-500 mt-1 block">Average Trust {currentImpactData.avgTrustScore}%</span>
+                  </div>
+                </div>
+
+                {/* Graph Switcher & Dynamic Visualizations */}
+                <div className="p-6 sm:p-8 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-6">
+                  
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
+                    <div>
+                      <h3 className="text-base font-bold text-white">
+                        {impactSelectedMetric === 'growth' ? 'Exchange Growth Trend' : impactSelectedMetric === 'savings' ? 'Student Savings Trend (₹)' : 'Most Reused Campus Categories'}
+                      </h3>
+                      <p className="text-xs text-neutral-400">
+                        {impactGraphType === 'line' ? 'Recommended: Line Chart for time trends' : impactGraphType === 'bar' ? 'Bar Chart Comparison' : 'Category Doughnut Share'}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <select
+                        value={impactSelectedMetric}
+                        onChange={(e) => {
+                          const m = e.target.value;
+                          setImpactSelectedMetric(m);
+                          if (m === 'category') setImpactGraphType('bar');
+                          else setImpactGraphType('line');
+                        }}
+                        className="bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none"
+                      >
+                        <option value="growth">📈 Exchange Growth</option>
+                        <option value="savings">💰 Student Savings Trend</option>
+                        <option value="category">📊 Category Distribution</option>
+                      </select>
+
+                      <div className="flex items-center gap-1 bg-neutral-950 p-1 rounded-xl border border-neutral-800">
+                        {[
+                          { id: 'line', label: '📈 Line' },
+                          { id: 'bar', label: '📊 Bar' },
+                          { id: 'pie', label: '🍩 Doughnut' }
+                        ].map((gt) => (
+                          <button
+                            key={gt.id}
+                            onClick={() => setImpactGraphType(gt.id)}
+                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                              impactGraphType === gt.id ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white'
+                            }`}
+                          >
+                            {gt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Render Dynamic Visual */}
+                  <div className="h-64 w-full flex items-center justify-center">
+                    
+                    {impactGraphType === 'line' && (
+                      <div className="w-full h-full pt-4">
+                        <svg className="w-full h-full overflow-visible" viewBox="0 0 500 150">
+                          <defs>
+                            <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+                              <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                            </linearGradient>
+                          </defs>
+                          
+                          <path
+                            d="M 0,120 Q 120,90 250,50 T 500,20 L 500,150 L 0,150 Z"
+                            fill="url(#lineGrad)"
+                          />
+                          <path
+                            d="M 0,120 Q 120,90 250,50 T 500,20"
+                            fill="none"
+                            stroke="#10b981"
+                            strokeWidth="3.5"
+                            strokeLinecap="round"
+                          />
+
+                          {currentImpactData.trendPoints.map((pt, i) => {
+                            const x = (i / (currentImpactData.trendPoints.length - 1)) * 480 + 10;
+                            const y = 130 - (pt.value / currentImpactData.totalExchanges) * 110;
+                            return (
+                              <g key={i}>
+                                <circle cx={x} cy={y} r="5" fill="#10b981" stroke="#000" strokeWidth="2" />
+                                <text x={x} y={y - 10} fill="#d4d4d4" fontSize="10" fontWeight="bold" textAnchor="middle">
+                                  {impactSelectedMetric === 'savings' ? `₹${pt.savings}` : pt.value}
+                                </text>
+                                <text x={x} y={145} fill="#737373" fontSize="9" textAnchor="middle">
+                                  {pt.label}
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </div>
+                    )}
+
+                    {impactGraphType === 'bar' && (
+                      <div className="w-full h-full flex items-end justify-around gap-3 pt-6 pb-2">
+                        {currentImpactData.categories.map((c, i) => (
+                          <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                            <span className="text-[10px] font-bold text-white">{c.count}</span>
+                            <div
+                              className="w-full max-w-[48px] rounded-t-xl transition-all duration-500"
+                              style={{ height: `${c.pct * 2.5}%`, backgroundColor: c.color }}
+                            />
+                            <span className="text-[10px] text-neutral-400 truncate max-w-[70px]">{c.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {impactGraphType === 'pie' && (
+                      <div className="w-full flex items-center justify-around flex-wrap gap-6">
+                        <div className="relative w-40 h-40">
+                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#262626" strokeWidth="3.8" />
+                            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#10b981" strokeWidth="3.8" strokeDasharray="32, 100" strokeDashoffset="0" />
+                            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#38bdf8" strokeWidth="3.8" strokeDasharray="28, 100" strokeDashoffset="-32" />
+                            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#a855f7" strokeWidth="3.8" strokeDasharray="18, 100" strokeDashoffset="-60" />
+                            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#f59e0b" strokeWidth="3.8" strokeDasharray="14, 100" strokeDashoffset="-78" />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-xs font-bold text-white">{currentImpactData.totalExchanges}</span>
+                            <span className="text-[9px] text-neutral-500 uppercase">Shares</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 text-xs">
+                          {currentImpactData.categories.map((c, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: c.color }} />
+                              <span className="text-neutral-300 font-semibold">{c.name}:</span>
+                              <span className="text-white font-bold">{c.pct}% ({c.count})</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+
+                </div>
+
+              </div>
+            )}
+
+            {/* VIEW 6: USER TRUST PROFILE */}
+            {activeTab === 'profile' && (
+              <div className="max-w-3xl mx-auto space-y-6 animate-fadeSlideUp">
+                
+                {/* ID Card */}
+                <div className="p-6 sm:p-8 rounded-3xl bg-neutral-900 border border-neutral-800 flex flex-col sm:flex-row items-center gap-6">
+                  <img
+                    src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=400&q=80"
+                    alt="Aarav"
+                    className="w-24 h-24 rounded-2xl object-cover border-2 border-emerald-500"
+                  />
+                  <div className="space-y-1 text-center sm:text-left">
+                    <div className="flex items-center justify-center sm:justify-start gap-2">
+                      <h2 className="text-xl font-black text-white">Aarav Sharma</h2>
+                      <span className="text-xs bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                        Campus Verified ✓
+                      </span>
+                    </div>
+                    <p className="text-xs text-neutral-400">Computer Engg • 3rd Year • Roll: 22CE1048</p>
+                    <p className="text-xs text-emerald-400 font-semibold mt-1">Hostel 3, Room 214 • Top 2% Super Lender</p>
+                  </div>
+                </div>
+
+                {/* Circular Trust Score Meter */}
+                <div className="p-6 rounded-3xl bg-neutral-900 border border-neutral-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs text-neutral-400 uppercase font-semibold">Campus Trust Score</span>
+                    <div className="text-3xl font-black text-emerald-400 mt-1">{userTrustScore}/100</div>
+                    <p className="text-xs text-neutral-300 mt-0.5">
+                      Last Updated: <strong className="text-white">{trustScoreReason}</strong>
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-neutral-400 block">Exchanges Completed: <strong>18</strong></span>
+                    <span className="text-xs text-emerald-400 block">Dispute Free: <strong>100%</strong></span>
+                  </div>
+                </div>
+
+                {/* Earned Badges */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Campus Verified', icon: '🛡️', desc: 'ID verified' },
+                    { label: 'Super Lender', icon: '⭐', desc: '18 exchanges' },
+                    { label: 'Punctual Hero', icon: '⏱️', desc: '100% on-time' },
+                    { label: 'Flawless Care', icon: '✨', desc: 'Zero disputes' }
+                  ].map((b, i) => (
+                    <div key={i} className="p-3.5 rounded-2xl bg-neutral-950 border border-neutral-800 text-center space-y-1">
+                      <span className="text-2xl block">{b.icon}</span>
+                      <strong className="text-xs text-white block">{b.label}</strong>
+                      <span className="text-[10px] text-neutral-500">{b.desc}</span>
+                    </div>
+                  ))}
+                </div>
+
+              </div>
+            )}
+
+            {/* VIEW 7: DEDICATED ADMIN HUB */}
+            {activeTab === 'admin' && (
+              <div className="space-y-6 animate-fadeSlideUp">
+                
+                <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-500/10 via-neutral-900 to-neutral-950 border border-amber-500/30 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-black text-white flex items-center gap-2">
+                      <span>⚡ Campus Circular Operations & Arbitration Hub</span>
+                      <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-bold">ADMIN ROLE</span>
+                    </h2>
+                    <p className="text-xs text-neutral-400">Escrow monitoring, fee configuration, and dispute arbitration workbench</p>
+                  </div>
+                </div>
+
+                {/* 4 Admin KPI Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="p-4 rounded-2xl bg-neutral-900 border border-neutral-800">
+                    <span className="text-xs text-neutral-400">Active Escrow Value</span>
+                    <div className="text-xl font-bold text-emerald-400 mt-1">₹42,800</div>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-neutral-900 border border-neutral-800">
+                    <span className="text-xs text-neutral-400">Platform Revenue (5%)</span>
+                    <div className="text-xl font-bold text-white mt-1">₹3,420</div>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-neutral-900 border border-neutral-800">
+                    <span className="text-xs text-neutral-400">Open Disputes</span>
+                    <div className="text-xl font-bold text-amber-400 mt-1">0 Active</div>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-neutral-900 border border-neutral-800">
+                    <span className="text-xs text-neutral-400">Overdue Returns</span>
+                    <div className="text-xl font-bold text-neutral-300 mt-1">0 Overdue</div>
+                  </div>
+                </div>
+
+                {/* Platform Fee Rate Slider */}
+                <div className="p-6 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-2">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span>Configurable Campus Platform Fee Rate:</span>
+                    <span className="text-emerald-400">{platformFeeRate}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="15"
+                    value={platformFeeRate}
+                    onChange={(e) => setPlatformFeeRate(Number(e.target.value))}
+                    className="w-full accent-emerald-500 bg-neutral-800 h-2 rounded-lg cursor-pointer"
+                  />
+                  <p className="text-[11px] text-neutral-500">Formula: Borrowing Charge + {platformFeeRate}% Platform Fee + Refundable Deposit = Escrow Lock</p>
+                </div>
+
+              </div>
+            )}
+
+          </main>
+
+          {/* ==========================================
+              GLOBAL MODALS (ALL ORIGINAL PRESERVED)
+              ========================================== */}
+
+          {/* 1. FLOATING COMPARATOR DOCK */}
+          {compareList.length > 0 && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-md w-[92%] p-3.5 rounded-2xl bg-neutral-900/95 border border-emerald-500/50 shadow-2xl flex items-center justify-between backdrop-blur-xl animate-fadeSlideUp">
+              <span className="text-xs font-bold text-white">
+                {compareList.length} of 3 items selected
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCompareList([])}
+                  className="px-2.5 py-1 text-xs text-neutral-400 hover:text-white"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => setIsCompareOpen(true)}
+                  className="py-1.5 px-4 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs rounded-xl shadow-md"
+                >
+                  Compare Side-by-Side
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 2. RESOURCE DETAIL MODAL */}
+          {selectedProduct && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeSlideUp">
+              <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl max-h-[92vh] overflow-y-auto space-y-5 text-white">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">{selectedProduct.category}</span>
+                    <h3 className="text-lg font-black text-white mt-0.5">{selectedProduct.title}</h3>
+                  </div>
+                  <button onClick={() => setSelectedProduct(null)} className="p-1 text-neutral-400 hover:text-white text-lg">✕</button>
+                </div>
+
+                <img src={selectedProduct.image} alt="detail" className="w-full h-64 rounded-2xl object-cover" />
+                <p className="text-xs text-neutral-300 leading-relaxed">{selectedProduct.description}</p>
+
+                <div className="p-4 bg-neutral-950 rounded-2xl text-xs space-y-2">
+                  <div className="flex justify-between"><span>Borrowing Rate:</span><strong>₹{selectedProduct.hourlyRate}/hr (₹{selectedProduct.dailyRate}/day)</strong></div>
+                  <div className="flex justify-between"><span>Refundable Escrow Deposit:</span><strong className="text-emerald-400">₹{selectedProduct.securityDeposit} (100% Refundable)</strong></div>
+                  <div className="flex justify-between"><span>Campus Location:</span><span>{selectedProduct.location} ({selectedProduct.distanceMeters}m away)</span></div>
+                  <div className="flex justify-between"><span>Seller Trust:</span><span className="text-emerald-400 font-semibold">{selectedProduct.seller.name} • {selectedProduct.seller.trustScore}% Score</span></div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <button
+                    onClick={() => toggleCompare(selectedProduct.id)}
+                    className="py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold text-xs rounded-xl"
+                  >
+                    {compareList.includes(selectedProduct.id) ? '✓ In Compare' : '+ Add to Compare'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAgreementProduct(selectedProduct);
+                      setSelectedProduct(null);
+                    }}
+                    className="py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-500/25"
+                  >
+                    Review Digital Contract & Sign 📝
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 3. DIGITAL BORROWING AGREEMENT MODAL */}
+          {agreementProduct && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeSlideUp">
+              <div className="w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4 text-white">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-base font-bold text-white">Digital Campus Borrowing Agreement</h3>
+                    <p className="text-[11px] text-neutral-400">Contract Ref #{agreementProduct.id} • {agreementProduct.title}</p>
+                  </div>
+                  <button onClick={() => setAgreementProduct(null)} className="text-neutral-400 hover:text-white">✕</button>
+                </div>
+
+                {/* Duration Slider */}
+                <div className="p-4 bg-neutral-950 rounded-2xl space-y-2">
+                  <div className="flex justify-between text-xs font-bold text-neutral-300">
+                    <span>Borrowing Duration:</span>
+                    <span className="text-emerald-400">{agreementDuration} Hours</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="72"
+                    value={agreementDuration}
+                    onChange={(e) => setAgreementDuration(Number(e.target.value))}
+                    className="w-full accent-emerald-500 bg-neutral-800 h-2 rounded-lg cursor-pointer"
+                  />
+                </div>
+
+                {/* Cost Breakdown */}
+                <div className="p-4 bg-neutral-950 rounded-2xl space-y-2 text-xs">
+                  <div className="flex justify-between text-neutral-300">
+                    <span>Borrowing Charge ({agreementDuration} hrs @ ₹{agreementProduct.hourlyRate}/hr):</span>
+                    <span>₹{agreementProduct.hourlyRate * agreementDuration}</span>
+                  </div>
+                  <div className="flex justify-between text-neutral-300">
+                    <span>Platform Service Fee ({platformFeeRate}%):</span>
+                    <span>₹{Math.round(agreementProduct.hourlyRate * agreementDuration * (platformFeeRate / 100))}</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-400 font-bold">
+                    <span>100% Refundable Security Deposit:</span>
+                    <span>₹{agreementProduct.securityDeposit}</span>
+                  </div>
+                  <div className="pt-2 border-t border-neutral-800 flex justify-between font-extrabold text-sm text-white">
+                    <span>Total Upfront Escrow Lock:</span>
+                    <span className="text-emerald-400">₹{(agreementProduct.hourlyRate * agreementDuration) + Math.round(agreementProduct.hourlyRate * agreementDuration * (platformFeeRate / 100)) + agreementProduct.securityDeposit}</span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-neutral-950 rounded-xl text-[11px] text-neutral-400 flex items-center justify-between">
+                  <span>Demo Payment Simulation Mode:</span>
+                  <span className="text-emerald-400 font-bold">Auto-Debit Escrow</span>
+                </div>
+
+                <button
+                  onClick={handleConfirmBorrow}
+                  className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-500/25 active:scale-95"
+                >
+                  Confirm Contract & Lock Escrow Deposit
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 4. USER <-> OWNER CONNECTION WORKFLOW MODAL */}
+          {isOwnerConnectionOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeSlideUp">
+              <div className="w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-5 text-white">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-base font-bold text-white">Connect with Resource Owner</h3>
+                    <p className="text-xs text-neutral-400">Coordinate handover & item pickup</p>
+                  </div>
+                  <button onClick={() => setIsOwnerConnectionOpen(false)} className="text-neutral-400 hover:text-white">✕</button>
+                </div>
+
+                {/* Distance-Based Recommendation */}
+                <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-neutral-400">Owner Distance:</span>
+                    <strong className="text-white">1.2 km (Hostel 3)</strong>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-400 font-bold">
+                    📍 Recommended: "Meet Offline" — Owner is nearby on campus!
+                  </div>
+                </div>
+
+                {/* Options */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'offline', label: '📍 Meet Offline', desc: 'Central Library' },
+                    { id: 'call', label: '📞 Video Call', desc: 'Demo Call Room' },
+                    { id: 'chat', label: '💬 Chat / SMS', desc: 'Campus Messenger' }
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => setMeetingMethod(m.id)}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        meetingMethod === m.id
+                          ? 'bg-neutral-800 border-emerald-500 text-white font-bold'
+                          : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      <div className="text-xs">{m.label}</div>
+                      <span className="text-[10px] text-neutral-500 block mt-0.5">{m.desc}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {meetingMethod === 'offline' && (
+                  <div className="p-4 bg-neutral-950 rounded-2xl space-y-3 text-xs">
+                    <div>
+                      <label className="block text-neutral-400 mb-1">Suggested Meeting Point:</label>
+                      <input
+                        type="text"
+                        value={meetingLocation}
+                        onChange={(e) => setMeetingLocation(e.target.value)}
+                        className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-xl text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-neutral-400 mb-1">Meeting Time:</label>
+                      <input
+                        type="text"
+                        value={meetingTime}
+                        onChange={(e) => setMeetingTime(e.target.value)}
+                        className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-xl text-white"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleConfirmMeeting}
+                  className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-500/25"
+                >
+                  Confirm Meeting & Proceed to Handover
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 5. LIFECYCLE STAGE CONTEXTUAL DETAIL MODAL */}
+          {lifecycleDetailModalStage && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeSlideUp">
+              <div className="w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-4 text-white">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{lifecycleDetailModalStage.icon}</span>
+                    <div>
+                      <h3 className="text-base font-extrabold text-white">Stage {lifecycleDetailModalStage.id}: {lifecycleDetailModalStage.title}</h3>
+                      <span className="text-[10px] font-bold text-emerald-400 uppercase">{lifecycleDetailModalStage.key}</span>
+                    </div>
+                  </div>
+                  <button onClick={() => setLifecycleDetailModalStage(null)} className="text-neutral-400 hover:text-white">✕</button>
+                </div>
+
+                <p className="text-xs text-neutral-300 bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 leading-relaxed">
+                  {lifecycleDetailModalStage.whatMeans}
+                </p>
+
+                <div className="space-y-2 text-xs">
+                  <div className="p-3 bg-neutral-950 rounded-xl border border-neutral-800">
+                    <strong className="text-emerald-400 block mb-0.5">Borrower Responsibility:</strong>
+                    <span className="text-neutral-300">{lifecycleDetailModalStage.borrowerAction}</span>
+                  </div>
+
+                  <div className="p-3 bg-neutral-950 rounded-xl border border-neutral-800">
+                    <strong className="text-cyan-400 block mb-0.5">Owner Responsibility:</strong>
+                    <span className="text-neutral-300">{lifecycleDetailModalStage.ownerAction}</span>
+                  </div>
+
+                  <div className="p-3 bg-neutral-950 rounded-xl border border-neutral-800 flex justify-between">
+                    <span className="text-neutral-400">Payment & Escrow State:</span>
+                    <strong className="text-white">{lifecycleDetailModalStage.paymentStatus}</strong>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setLifecycleDetailModalStage(null)}
+                  className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs rounded-xl"
+                >
+                  Close Stage Inspector
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 6. BEFORE & AFTER PHOTO INSPECTION SLIDER MODAL */}
+          {isInspectorOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeSlideUp">
+              <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-4 text-white">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-base font-bold">Before & After Photo Condition Inspector</h3>
+                    <p className="text-[11px] text-neutral-400">Drag the slider horizontally to audit condition differences</p>
+                  </div>
+                  <button onClick={() => setIsInspectorOpen(false)} className="text-neutral-400 hover:text-white">✕</button>
+                </div>
+
+                <div className="relative h-64 sm:h-80 w-full rounded-2xl overflow-hidden bg-black select-none border border-neutral-700">
+                  <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute top-2.5 right-2.5 px-2 py-0.5 bg-black/80 text-[10px] text-cyan-400 font-bold rounded">Post-Return</div>
+
+                  <div className="absolute inset-0 overflow-hidden" style={{ width: `${inspectorSlider}%` }}>
+                    <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80" className="absolute inset-0 w-full h-full object-cover max-w-none" style={{ width: '600px' }} />
+                    <div className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-black/80 text-[10px] text-emerald-400 font-bold rounded">Pre-Handover</div>
+                  </div>
+
+                  <div className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize flex items-center justify-center -translate-x-1/2" style={{ left: `${inspectorSlider}%` }}>
+                    <div className="w-6 h-6 rounded-full bg-white text-black font-bold flex items-center justify-center text-[10px] shadow-lg">↔</div>
+                  </div>
+
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={inspectorSlider}
+                    onChange={(e) => setInspectorSlider(Number(e.target.value))}
+                    className="absolute inset-0 opacity-0 cursor-ew-resize w-full h-full"
+                  />
+                </div>
+
+                <button
+                  onClick={handleConfirmReturnAndRefund}
+                  className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs rounded-xl shadow-lg"
+                >
+                  Approve 100% Pristine Condition & Release Escrow Deposit
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 7. SIDE BY SIDE COMPARISON MODAL */}
+          {isCompareOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeSlideUp">
+              <div className="w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto space-y-4 text-white">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-base font-bold">Side-by-Side Resource Comparator</h3>
+                    <p className="text-xs text-neutral-400">Comparing {compareList.length} items on specs, proximity, and trust</p>
+                  </div>
+                  <button onClick={() => setIsCompareOpen(false)} className="text-neutral-400 hover:text-white">✕</button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {products.filter((p) => compareList.includes(p.id)).map((item) => (
+                    <div key={item.id} className="p-4 bg-neutral-950 rounded-2xl border border-neutral-800 space-y-2 text-xs">
+                      <img src={item.image} className="w-full h-32 rounded-xl object-cover" />
+                      <h4 className="font-bold text-sm text-white line-clamp-1">{item.title}</h4>
+                      <div className="text-emerald-400 font-semibold">₹{item.hourlyRate}/hr • Deposit: ₹{item.securityDeposit}</div>
+                      <div className="text-neutral-400">Distance: {item.distanceMeters}m ({item.walkTimeMinutes} min walk)</div>
+                      <div className="text-neutral-400">Condition: {item.condition}</div>
+                      <div className="text-neutral-400">Seller: {item.seller.name} ({item.seller.trustScore}% Trust)</div>
+                      <button
+                        onClick={() => {
+                          setAgreementProduct(item);
+                          setIsCompareOpen(false);
+                        }}
+                        className="w-full py-2 bg-emerald-500 text-black font-extrabold text-xs rounded-xl mt-2"
+                      >
+                        Borrow This
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TOAST ALERT NOTIFICATION */}
+          {toast && (
+            <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-neutral-900/95 border border-emerald-500/50 text-white shadow-2xl animate-fadeSlideUp max-w-sm">
+              <h4 className="font-bold text-xs text-emerald-400">{toast.title}</h4>
+              <p className="text-xs text-neutral-300 mt-0.5 leading-relaxed">{toast.msg}</p>
+            </div>
+          )}
+
+          {/* FOOTER */}
+          <footer className="w-full border-t border-neutral-900 bg-neutral-950/80 py-8 px-4 sm:px-8 text-neutral-400 text-xs text-center">
+            <div className="flex items-center justify-center gap-2 text-white font-bold mb-1">
+              <span className="text-emerald-400">●</span>
+              <span>CAMPUS CIRCULAR</span>
+              <span className="text-neutral-600 font-normal">| From Ownership to Access</span>
+            </div>
+            <p className="text-neutral-500">
+              WebFusion 2.0 Inter-College Frontend Web Development Competition • Coding Club-CodeCrafters
+            </p>
+          </footer>
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1294 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campus Circular — From Ownership to Access</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1A1C;
+    --surface:#142124;
+    --surface-2:#1A2A2D;
+    --surface-3:#203437;
+    --glass: rgba(255,255,255,.05);
+    --glass-strong: rgba(255,255,255,.08);
+    --glass-border: rgba(255,255,255,.10);
+    --teal:#2BB3A3;
+    --teal-soft:#9adfd3;
+    --marigold:#F4A93B;
+    --lilac:#9C8CF0;
+    --coral:#E86A5C;
+    --mint:#4ADE94;
+    --paper:#F6F1E7;
+    --text:#EAF3F1;
+    --text-dim:#9FB6B2;
+    --text-faint:#6D8582;
+    --radius-lg:24px;
+    --radius-md:16px;
+    --radius-sm:10px;
+    --shadow-lg:0 24px 70px -24px rgba(0,0,0,.65);
+    --shadow-md:0 12px 32px -14px rgba(0,0,0,.55);
+    --font-display:'Fraunces', serif;
+    --font-body:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+    --accent: var(--teal);
+    --accent-2: var(--marigold);
+  }
+
+  body[data-view="discover"]{ --accent:#2BB3A3; --accent-2:#F4A93B; }
+  body[data-view="ai"]{ --accent:#9C8CF0; --accent-2:#2BB3A3; }
+  body[data-view="requests"]{ --accent:#F4A93B; --accent-2:#E86A5C; }
+  body[data-view="profile"]{ --accent:#4ADE94; --accent-2:#2BB3A3; }
+  body[data-view="fees"]{ --accent:#F4A93B; --accent-2:#9C8CF0; }
+  body[data-view="impact"]{ --accent:#E86A5C; --accent-2:#F4A93B; }
+  body[data-view="admin"]{ --accent:#4ADE94; --accent-2:#E86A5C; }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{
+    background:var(--ink);
+    color:var(--text);
+    font-family:var(--font-body);
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+  ::selection{ background:var(--accent); color:var(--ink); }
+  ::-webkit-scrollbar{ width:10px; height:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:var(--surface-3); border-radius:8px; }
+  a{ color:inherit; }
+  button{ font-family:inherit; cursor:pointer; }
+  input,select,textarea{ font-family:inherit; }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* ---------- Ambient background ---------- */
+  .ambient{ position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+  .blob{ position:absolute; border-radius:50%; filter:blur(70px); opacity:.35; transition:background-color 1.4s ease, transform 1.4s ease; }
+  .blob-a{ width:46vw; height:46vw; top:-14vw; left:-10vw; background-color:var(--accent); animation:floatA 22s ease-in-out infinite; }
+  .blob-b{ width:34vw; height:34vw; bottom:-10vw; right:-6vw; background-color:var(--accent-2); animation:floatB 26s ease-in-out infinite; }
+  .blob-c{ width:26vw; height:26vw; top:38%; left:60%; background-color:var(--lilac); opacity:.18; animation:floatC 30s ease-in-out infinite; }
+  .grain{ position:absolute; inset:0; background:radial-gradient(circle at 30% 20%, rgba(255,255,255,.03), transparent 60%); }
+  @keyframes floatA{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(4vw,6vw) scale(1.08); } }
+  @keyframes floatB{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(-5vw,-4vw) scale(1.1); } }
+  @keyframes floatC{ 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(-6vw,5vw); } }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
+  }
+
+  /* ---------- Layout shell ---------- */
+  header.topbar{
+    position:sticky; top:0; z-index:40;
+    display:flex; align-items:center; justify-content:space-between; gap:20px;
+    padding:16px clamp(16px,4vw,48px);
+    backdrop-filter:blur(18px);
+    background:rgba(15,26,28,.62);
+    border-bottom:1px solid var(--glass-border);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:38px; height:38px; border-radius:50%;
+    background:conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent));
+    color:var(--ink); font-size:20px; font-weight:700;
+    animation:spinMark 8s linear infinite;
+  }
+  @keyframes spinMark{ to{ transform:rotate(360deg); } }
+  .brand-text strong{ font-family:var(--font-display); font-size:1.15rem; letter-spacing:.2px; display:block; line-height:1.1; }
+  .brand-text small{ color:var(--text-dim); font-size:.72rem; letter-spacing:.4px; text-transform:uppercase; }
+
+  nav.tabbar{
+    position:relative; display:flex; gap:4px;
+    background:var(--glass); border:1px solid var(--glass-border);
+    padding:5px; border-radius:999px;
+    overflow-x:auto; max-width:64vw;
+    scrollbar-width:none;
+  }
+  nav.tabbar::-webkit-scrollbar{ display:none; }
+  .tab-btn{
+    position:relative; z-index:2; white-space:nowrap;
+    background:transparent; border:none; color:var(--text-dim);
+    font-size:.82rem; font-weight:600; letter-spacing:.2px;
+    padding:9px 16px; border-radius:999px; transition:color .3s ease;
+  }
+  .tab-btn.active{ color:var(--ink); }
+  .tab-btn:hover:not(.active){ color:var(--text); }
+  .tab-indicator{
+    position:absolute; z-index:1; top:5px; left:5px; height:calc(100% - 10px);
+    background:linear-gradient(120deg, var(--accent), var(--accent-2));
+    border-radius:999px; transition:transform .45s cubic-bezier(.65,0,.35,1), width .45s cubic-bezier(.65,0,.35,1), background 1s ease;
+  }
+
+  main#app{ position:relative; z-index:1; max-width:1240px; margin:0 auto; padding:28px clamp(16px,4vw,48px) 90px; }
+
+  .view{ display:none; opacity:0; transform:translateY(14px); }
+  .view.active{ display:block; animation:viewIn .55s cubic-bezier(.22,.9,.35,1) forwards; }
+  @keyframes viewIn{ to{ opacity:1; transform:translateY(0); } }
+
+  /* ---------- typography helpers ---------- */
+  .eyebrow{ font-family:var(--font-mono); font-size:.72rem; letter-spacing:1.6px; text-transform:uppercase; color:var(--accent); }
+  h1{ font-family:var(--font-display); font-weight:600; font-size:clamp(2rem,4.4vw,3.4rem); line-height:1.06; margin:10px 0 16px; }
+  h2{ font-family:var(--font-display); font-weight:600; font-size:clamp(1.3rem,2.4vw,1.8rem); }
+  h3{ font-family:var(--font-display); font-weight:600; font-size:1.15rem; }
+  p{ color:var(--text-dim); line-height:1.6; }
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; margin:46px 0 18px; gap:12px; flex-wrap:wrap; }
+  .hint{ font-family:var(--font-mono); font-size:.72rem; color:var(--text-faint); }
+
+  /* ---------- buttons ---------- */
+  .btn{ display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:11px 22px; font-weight:700; font-size:.85rem; border:1px solid transparent; transition:transform .25s ease, box-shadow .25s ease, background .25s ease, border-color .25s ease; }
+  .btn:active{ transform:scale(.96); }
+  .btn-primary{ background:linear-gradient(120deg, var(--accent), var(--accent-2)); color:var(--ink); box-shadow:var(--shadow-md); }
+  .btn-primary:hover{ box-shadow:0 16px 34px -12px var(--accent); transform:translateY(-2px); }
+  .btn-ghost{ background:var(--glass); border-color:var(--glass-border); color:var(--text); }
+  .btn-ghost:hover{ background:var(--glass-strong); transform:translateY(-2px); }
+  .btn-sm{ padding:7px 14px; font-size:.74rem; }
+  .btn-block{ width:100%; justify-content:center; }
+  .btn-danger{ background:rgba(232,106,92,.15); color:var(--coral); border-color:rgba(232,106,92,.35); }
+  .btn[disabled]{ opacity:.4; cursor:not-allowed; transform:none !important; box-shadow:none !important; }
+
+  /* ---------- glass card ---------- */
+  .card{ background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius-lg); padding:22px; backdrop-filter:blur(14px); box-shadow:var(--shadow-md); }
+
+  /* ---------- HERO ---------- */
+  .hero{ display:grid; grid-template-columns:1.1fr .9fr; gap:40px; align-items:center; padding:20px 0 10px; }
+  @media (max-width:860px){ .hero{ grid-template-columns:1fr; } }
+  .hero-cta{ display:flex; gap:12px; flex-wrap:wrap; margin:22px 0 26px; }
+  .hero-stats{ display:flex; gap:26px; flex-wrap:wrap; }
+  .hero-stat b{ display:block; font-family:var(--font-mono); font-size:1.3rem; color:var(--accent); }
+  .hero-stat span{ font-size:.72rem; color:var(--text-faint); text-transform:uppercase; letter-spacing:.5px; }
+
+  .hero-visual{ display:flex; justify-content:center; }
+  .ring-wrap{ position:relative; width:340px; height:340px; max-width:82vw; max-height:82vw; }
+  .ring-track{ position:absolute; inset:0; border-radius:50%; border:1.5px dashed var(--glass-border); }
+  .ring-core{ position:absolute; inset:26%; border-radius:50%; background:radial-gradient(circle at 35% 30%, var(--surface-3), var(--surface)); display:flex; align-items:center; justify-content:center; text-align:center; padding:14px; border:1px solid var(--glass-border); box-shadow:inset 0 0 40px rgba(0,0,0,.4); }
+  .ring-core b{ font-family:var(--font-display); font-size:1.5rem; }
+  .ring-core span{ font-size:.68rem; color:var(--text-dim); }
+  .orbit-spin{ position:absolute; inset:0; animation:spin 26s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .orbit-icon{ position:absolute; width:52px; height:52px; border-radius:50%; background:var(--surface-2); border:1px solid var(--glass-border); display:flex; align-items:center; justify-content:center; font-size:22px; animation:counterSpin 26s linear infinite; box-shadow:var(--shadow-md); }
+  @keyframes counterSpin{ to{ transform:rotate(-360deg); } }
+  .orbit-icon.floaty{ animation:counterSpin 26s linear infinite, bob 4s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{ margin-top:0; } 50%{ margin-top:-8px; } }
+
+  /* ---------- filter bar ---------- */
+  .filter-bar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:36px; background:var(--glass); border:1px solid var(--glass-border); padding:12px; border-radius:var(--radius-md); }
+  .filter-bar input[type=search]{ flex:1; min-width:180px; background:transparent; border:none; color:var(--text); font-size:.9rem; padding:8px 10px; }
+  .filter-bar select{ background:var(--surface-2); border:1px solid var(--glass-border); color:var(--text); border-radius:var(--radius-sm); padding:8px 10px; font-size:.8rem; }
+  .chip-toggle{ background:var(--surface-2); border:1px solid var(--glass-border); color:var(--text-dim); border-radius:999px; padding:8px 14px; font-size:.78rem; font-weight:600; transition:all .25s ease; }
+  .chip-toggle.on{ background:var(--accent); color:var(--ink); border-color:var(--accent); }
+
+  /* ---------- carousel (sliding) ---------- */
+  .carousel{ display:flex; gap:16px; overflow-x:auto; padding:6px 4px 18px; scroll-snap-type:x mandatory; scrollbar-width:thin; }
+  .carousel .mini-card{ scroll-snap-align:start; min-width:230px; }
+
+  /* ---------- resource grid & cards ---------- */
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:18px; }
+  .res-card{ position:relative; border-radius:var(--radius-lg); background:var(--glass); border:1px solid var(--glass-border); padding:18px; transition:transform .35s cubic-bezier(.2,.8,.3,1), box-shadow .35s ease, border-color .35s ease; opacity:0; transform:translateY(18px); }
+  .res-card.reveal{ animation:cardIn .6s cubic-bezier(.22,.9,.35,1) forwards; }
+  @keyframes cardIn{ to{ opacity:1; transform:translateY(0); } }
+  .res-card:hover{ transform:translateY(-6px) rotate(-.3deg); box-shadow:var(--shadow-lg); border-color:var(--accent); }
+  .res-icon{ width:100%; height:110px; border-radius:var(--radius-md); background:radial-gradient(circle at 30% 20%, var(--surface-3), var(--surface-2)); display:flex; align-items:center; justify-content:center; font-size:2.6rem; margin-bottom:12px; }
+  .res-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+  .res-cat{ font-family:var(--font-mono); font-size:.62rem; letter-spacing:.6px; text-transform:uppercase; color:var(--accent); background:rgba(255,255,255,.06); padding:3px 8px; border-radius:6px; }
+  .res-name{ font-family:var(--font-display); font-size:1.05rem; margin:8px 0 2px; }
+  .res-owner{ font-size:.76rem; color:var(--text-faint); display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+  .trust-dot{ width:7px; height:7px; border-radius:50%; background:var(--mint); display:inline-block; }
+  .res-meta{ display:flex; flex-wrap:wrap; gap:8px; font-size:.72rem; color:var(--text-dim); margin:10px 0; }
+  .res-meta span{ background:var(--surface-2); padding:4px 8px; border-radius:6px; }
+  .res-price{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; }
+  .res-price b{ font-family:var(--font-mono); font-size:1.05rem; color:var(--text); }
+  .res-price small{ display:block; color:var(--text-faint); font-size:.65rem; }
+  .badge-avail{ font-size:.64rem; font-weight:700; padding:3px 9px; border-radius:999px; }
+  .badge-avail.yes{ background:rgba(74,222,148,.16); color:var(--mint); }
+  .badge-avail.no{ background:rgba(232,106,92,.16); color:var(--coral); }
+  .stars{ color:var(--marigold); font-size:.78rem; letter-spacing:1px; }
+
+  /* ---------- Circulation ring stepper (mini, used on request cards) ---------- */
+  .stepper{ display:flex; align-items:center; margin:16px 0 4px; }
+  .step{ flex:1; display:flex; flex-direction:column; align-items:center; position:relative; }
+  .step .dot{ width:16px; height:16px; border-radius:50%; background:var(--surface-3); border:2px solid var(--glass-border); z-index:2; transition:all .4s ease; }
+  .step .lbl{ font-size:.58rem; color:var(--text-faint); margin-top:6px; text-align:center; letter-spacing:.2px; }
+  .step::before{ content:''; position:absolute; top:7px; left:-50%; width:100%; height:2px; background:var(--glass-border); z-index:1; }
+  .step:first-child::before{ display:none; }
+  .step.done .dot{ background:var(--accent); border-color:var(--accent); }
+  .step.done::before{ background:var(--accent); }
+  .step.current .dot{ background:var(--ink); border-color:var(--accent); box-shadow:0 0 0 4px rgba(244,169,59,.22); animation:pulseDot 1.8s ease-in-out infinite; }
+  @keyframes pulseDot{ 0%,100%{ box-shadow:0 0 0 4px rgba(244,169,59,.18);} 50%{ box-shadow:0 0 0 8px rgba(244,169,59,.05);} }
+  .step.current .lbl{ color:var(--text); font-weight:700; }
+  .step.done .lbl{ color:var(--text-dim); }
+
+  /* ---------- request card ---------- */
+  .req-card{ border-radius:var(--radius-lg); background:var(--glass); border:1px solid var(--glass-border); padding:20px; margin-bottom:16px; }
+  .req-head{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+  .req-icon{ font-size:1.8rem; margin-right:10px; }
+  .req-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .settle-box{ margin-top:14px; padding:12px 14px; background:var(--surface-2); border-radius:var(--radius-sm); font-size:.8rem; color:var(--text-dim); }
+  .settle-box b{ color:var(--text); }
+  .dispute-tag{ font-size:.65rem; font-weight:700; padding:3px 9px; border-radius:999px; background:rgba(232,106,92,.16); color:var(--coral); }
+
+  /* ---------- AI assistant ---------- */
+  .ai-box{ display:grid; grid-template-columns:1fr; gap:16px; }
+  .ai-input-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  textarea#aiQuery{ flex:1; min-width:240px; resize:vertical; min-height:64px; background:var(--glass); border:1px solid var(--glass-border); color:var(--text); border-radius:var(--radius-md); padding:14px; font-size:.92rem; }
+  .example-chips{ display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 4px; }
+  .example-chip{ background:var(--surface-2); border:1px solid var(--glass-border); color:var(--text-dim); font-size:.74rem; padding:7px 12px; border-radius:999px; transition:.25s; }
+  .example-chip:hover{ color:var(--text); border-color:var(--accent); }
+  .ai-result{ margin-top:8px; }
+  .ai-reason{ font-family:var(--font-mono); font-size:.78rem; color:var(--accent); margin:18px 0 10px; }
+
+  /* ---------- modal ---------- */
+  .modal-backdrop{ position:fixed; inset:0; background:rgba(6,10,11,.72); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:100; padding:20px; opacity:0; transition:opacity .3s ease; }
+  .modal-backdrop.open{ display:flex; opacity:1; }
+  .modal{ width:min(640px,94vw); max-height:88vh; overflow-y:auto; background:var(--surface); border:1px solid var(--glass-border); border-radius:var(--radius-lg); padding:26px; box-shadow:var(--shadow-lg); transform:translateY(24px) scale(.97); opacity:0; transition:transform .38s cubic-bezier(.22,.9,.35,1), opacity .38s ease; }
+  .modal-backdrop.open .modal{ transform:translateY(0) scale(1); opacity:1; }
+  .modal-close{ float:right; background:var(--glass); border:1px solid var(--glass-border); border-radius:50%; width:32px; height:32px; color:var(--text-dim); font-size:1rem; }
+  .field{ margin:12px 0; }
+  .field label{ display:block; font-size:.72rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text-faint); margin-bottom:6px; }
+  .field input, .field select, .field textarea{ width:100%; background:var(--surface-2); border:1px solid var(--glass-border); color:var(--text); padding:10px 12px; border-radius:var(--radius-sm); font-size:.88rem; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .breakdown{ margin-top:16px; background:var(--surface-2); border-radius:var(--radius-md); padding:16px; }
+  .breakdown .line{ display:flex; justify-content:space-between; font-size:.85rem; padding:6px 0; color:var(--text-dim); border-bottom:1px dashed var(--glass-border); }
+  .breakdown .line:last-child{ border-bottom:none; }
+  .breakdown .total{ color:var(--text); font-weight:700; font-family:var(--font-mono); font-size:1rem; }
+
+  /* ---------- toasts ---------- */
+  .toast-stack{ position:fixed; bottom:20px; right:20px; z-index:200; display:flex; flex-direction:column; gap:10px; }
+  .toast{ background:var(--surface-2); border:1px solid var(--glass-border); border-left:4px solid var(--accent); padding:12px 18px; border-radius:var(--radius-sm); box-shadow:var(--shadow-md); font-size:.84rem; min-width:220px; animation:toastIn .4s cubic-bezier(.22,.9,.35,1), toastOut .4s ease 3.4s forwards; }
+  @keyframes toastIn{ from{ opacity:0; transform:translateX(40px);} to{ opacity:1; transform:translateX(0);} }
+  @keyframes toastOut{ to{ opacity:0; transform:translateX(40px);} }
+
+  /* ---------- profile ---------- */
+  .profile-grid{ display:grid; grid-template-columns:.9fr 1.1fr; gap:22px; }
+  @media (max-width:800px){ .profile-grid{ grid-template-columns:1fr; } }
+  .gauge-wrap{ display:flex; flex-direction:column; align-items:center; }
+  .gauge-num{ font-family:var(--font-display); font-size:2.2rem; margin-top:-96px; }
+  .stat-mini-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px; }
+  .stat-mini{ background:var(--surface-2); border-radius:var(--radius-sm); padding:12px; text-align:center; }
+  .stat-mini b{ display:block; font-family:var(--font-mono); font-size:1.15rem; }
+  .stat-mini span{ font-size:.64rem; color:var(--text-faint); text-transform:uppercase; }
+  .badge-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .badge-pill{ font-size:.7rem; font-weight:700; padding:6px 12px; border-radius:999px; background:linear-gradient(120deg, var(--accent), var(--accent-2)); color:var(--ink); }
+  .leader-row{ display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed var(--glass-border); font-size:.85rem; }
+  .leader-row:last-child{ border-bottom:none; }
+  .rank{ font-family:var(--font-mono); color:var(--accent); width:22px; display:inline-block; }
+
+  /* ---------- fee calculator ---------- */
+  .fee-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; }
+  @media (max-width:800px){ .fee-grid{ grid-template-columns:1fr; } }
+  .big-num{ font-family:var(--font-mono); font-size:2.4rem; color:var(--accent); transition:color .3s ease; }
+
+  /* ---------- impact dashboard ---------- */
+  .stat-card-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; }
+  .stat-card{ background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius-md); padding:18px; }
+  .stat-card b{ display:block; font-family:var(--font-display); font-size:1.7rem; }
+  .stat-card span{ font-size:.72rem; color:var(--text-faint); text-transform:uppercase; letter-spacing:.4px; }
+  .bar-row{ display:grid; grid-template-columns:120px 1fr 46px; align-items:center; gap:12px; margin:10px 0; font-size:.8rem; }
+  .bar-track{ height:10px; border-radius:6px; background:var(--surface-2); overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:6px; background:linear-gradient(90deg, var(--accent), var(--accent-2)); width:0; transition:width 1.1s cubic-bezier(.22,.9,.35,1); }
+
+  /* ---------- admin ---------- */
+  .subtabs{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .subtab-btn{ background:var(--surface-2); border:1px solid var(--glass-border); color:var(--text-dim); padding:8px 16px; border-radius:999px; font-size:.78rem; font-weight:600; }
+  .subtab-btn.active{ background:var(--accent); color:var(--ink); border-color:var(--accent); }
+  table{ width:100%; border-collapse:collapse; font-size:.82rem; }
+  th,td{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--glass-border); white-space:nowrap; }
+  th{ color:var(--text-faint); font-weight:600; text-transform:uppercase; font-size:.66rem; letter-spacing:.4px; }
+  .table-wrap{ overflow-x:auto; border-radius:var(--radius-md); border:1px solid var(--glass-border); }
+  .login-card{ max-width:380px; margin:40px auto; text-align:center; }
+  .user-row{ display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px dashed var(--glass-border); flex-wrap:wrap; gap:8px; }
+  .suspended-tag{ font-size:.62rem; font-weight:700; padding:3px 9px; border-radius:999px; background:rgba(232,106,92,.18); color:var(--coral); }
+  .slider-row{ display:flex; align-items:center; gap:14px; }
+  input[type=range]{ flex:1; accent-color:var(--accent); }
+
+  footer.footer{ position:relative; z-index:1; text-align:center; padding:30px 20px 50px; color:var(--text-faint); font-size:.76rem; }
+  footer.footer span{ color:var(--accent); }
+
+  .empty-state{ text-align:center; padding:40px 20px; color:var(--text-faint); font-size:.9rem; }
+
+  @media (max-width:640px){
+    .row2{ grid-template-columns:1fr; }
+    nav.tabbar{ max-width:56vw; }
+  }
+</style>
+</head>
+<body data-view="discover">
+
+<div class="ambient" aria-hidden="true">
+  <div class="blob blob-a"></div>
+  <div class="blob blob-b"></div>
+  <div class="blob blob-c"></div>
+  <div class="grain"></div>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">⟲</span>
+    <div class="brand-text">
+      <strong>Campus Circular</strong>
+      <small>From ownership to access</small>
+    </div>
+  </div>
+  <nav class="tabbar" id="tabbar">
+    <span class="tab-indicator" id="tabIndicator"></span>
+    <button class="tab-btn active" data-view="discover">Discover</button>
+    <button class="tab-btn" data-view="ai">AI Assistant</button>
+    <button class="tab-btn" data-view="requests">My Requests</button>
+    <button class="tab-btn" data-view="profile">Trust Profile</button>
+    <button class="tab-btn" data-view="fees">Fee Calculator</button>
+    <button class="tab-btn" data-view="impact">Impact</button>
+    <button class="tab-btn" data-view="admin">Admin</button>
+  </nav>
+</header>
+
+<main id="app">
+
+  <!-- ===================== DISCOVER ===================== -->
+  <section class="view active" id="view-discover">
+    <div class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow">Campus resource circulation</span>
+        <h1>Why buy what someone nearby already has?</h1>
+        <p>Discover, share, lend, borrow, donate and request resources within your campus — matched by availability, distance, condition and trust, not just a name search.</p>
+        <div class="hero-cta">
+          <button class="btn btn-primary" id="btnBrowse">Browse resources</button>
+          <button class="btn btn-ghost" data-goto="ai">Ask the AI assistant →</button>
+        </div>
+        <div class="hero-stats" id="heroStats"></div>
+      </div>
+      <div class="hero-visual">
+        <div class="ring-wrap">
+          <div class="ring-track"></div>
+          <div class="orbit-spin" id="heroOrbit"></div>
+          <div class="ring-core">
+            <div>
+              <b id="heroCoreNum">14</b>
+              <span>resources circulating on campus right now</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <input type="search" id="searchInput" placeholder="Search resources, tags, categories…">
+      <select id="categoryFilter"><option value="">All categories</option></select>
+      <select id="sortFilter">
+        <option value="rating">Sort: top rated</option>
+        <option value="distance">Sort: nearest first</option>
+        <option value="price-asc">Sort: lowest charge</option>
+        <option value="price-desc">Sort: highest charge</option>
+      </select>
+      <button class="chip-toggle" id="availOnlyToggle">Available only</button>
+    </div>
+
+    <div class="section-head"><h2>Recommended near you</h2><span class="hint">swipe / scroll →</span></div>
+    <div class="carousel" id="recommendedRow"></div>
+
+    <div class="section-head"><h2>All resources</h2><span class="hint" id="resultCount"></span></div>
+    <div class="grid" id="resourceGrid"></div>
+  </section>
+
+  <!-- ===================== AI ASSISTANT ===================== -->
+  <section class="view" id="view-ai">
+    <span class="eyebrow">Need-based discovery</span>
+    <h1>Describe what you need — not what to search for.</h1>
+    <p>Type a real need in plain language, like <em>“I need to make a reel for my club event tomorrow”</em>, and the assistant identifies a suitable resource bundle from real listings, weighing availability, distance, condition and trust.</p>
+
+    <div class="ai-box card" style="margin-top:22px;">
+      <div class="ai-input-row">
+        <textarea id="aiQuery" placeholder="e.g. I need to make a reel for my club event tomorrow"></textarea>
+        <button class="btn btn-primary" id="aiSubmit">Find resources</button>
+      </div>
+      <div class="example-chips" id="aiExamples"></div>
+      <div class="ai-result" id="aiResult"></div>
+    </div>
+
+    <div class="section-head"><h2>What AI does here</h2></div>
+    <div class="stat-card-grid">
+      <div class="stat-card"><b>🧠</b><span>Natural-language need understanding</span></div>
+      <div class="stat-card"><b>🎯</b><span>Smart matching &amp; alternatives</span></div>
+      <div class="stat-card"><b>🔍</b><span>Condition &amp; trust-aware ranking</span></div>
+      <div class="stat-card"><b>✍️</b><span>Auto-drafted borrow requests</span></div>
+    </div>
+  </section>
+
+  <!-- ===================== MY REQUESTS ===================== -->
+  <section class="view" id="view-requests">
+    <span class="eyebrow">Borrowing lifecycle</span>
+    <h1>My requests</h1>
+    <p>Track every exchange through the full circulation lifecycle — from a request to a settled, rated return.</p>
+    <div class="section-head" style="margin-top:30px;"><h2>Active &amp; recent</h2></div>
+    <div id="requestsList"></div>
+    <div class="section-head"><h2>My disputes</h2></div>
+    <div id="disputesList"></div>
+  </section>
+
+  <!-- ===================== TRUST PROFILE ===================== -->
+  <section class="view" id="view-profile">
+    <span class="eyebrow">User &amp; trust profile</span>
+    <h1>Your standing on campus</h1>
+    <div class="profile-grid" style="margin-top:24px;">
+      <div class="card" id="profileCard"></div>
+      <div class="card">
+        <h3>Campus trust leaderboard</h3>
+        <p style="margin-bottom:6px;">Members with the strongest exchange record.</p>
+        <div id="leaderboard"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FEE CALCULATOR ===================== -->
+  <section class="view" id="view-fees">
+    <span class="eyebrow">Platform fee</span>
+    <h1>Fee &amp; deposit calculator</h1>
+    <p>Borrowing Charge + Platform Fee + Security Deposit = Transaction Amount. The platform fee percentage is configured by admins and applies live to every simulated exchange.</p>
+    <div class="fee-grid" style="margin-top:24px;">
+      <div class="card">
+        <div class="field">
+          <label>Resource</label>
+          <select id="feeResource"></select>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Borrow duration (days)</label>
+            <input type="number" id="feeDays" value="2" min="1" max="30">
+          </div>
+          <div class="field">
+            <label>Current platform fee</label>
+            <input type="text" id="feePercentDisplay" disabled>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="big-num" id="feeTotal">₹0</div>
+        <span class="hint">Total transaction amount</span>
+        <div class="breakdown" id="feeBreakdown"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== IMPACT DASHBOARD ===================== -->
+  <section class="view" id="view-impact">
+    <span class="eyebrow">Campus impact</span>
+    <h1>What sharing is doing for campus</h1>
+    <div class="stat-card-grid" id="impactStats" style="margin-top:22px;"></div>
+
+    <div class="section-head"><h2>Popular categories</h2></div>
+    <div class="card" id="categoryChart"></div>
+
+    <div class="section-head"><h2>Reliability &amp; reuse</h2></div>
+    <div class="stat-card-grid">
+      <div class="card">
+        <h3>On-time returns</h3>
+        <div class="big-num" id="onTimeRate">0%</div>
+        <p>of settled exchanges returned on or before the due stage.</p>
+      </div>
+      <div class="card">
+        <h3>Money saved</h3>
+        <div class="big-num" id="moneySaved">₹0</div>
+        <p>estimated retail value accessed instead of purchased, campus-wide.</p>
+      </div>
+      <div class="card">
+        <h3>Resources reused</h3>
+        <div class="big-num" id="reusedCount">0</div>
+        <p>total times a listed item has circulated to a new borrower.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ADMIN ===================== -->
+  <section class="view" id="view-admin">
+    <span class="eyebrow">Admin console</span>
+    <h1>Platform management</h1>
+    <div id="adminArea"></div>
+  </section>
+
+</main>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<footer class="footer">Built for <span>WEBFUSION 2.0</span> — Campus Circular is a frontend-only simulation. All data, users and transactions are mock and stored in memory.</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     MOCK DATA
+  ============================================================ */
+  const OWNERS = [
+    {id:'u1', name:'Aarav Mehta', dept:'EXTC', year:'3rd Year', trust:92, verified:true, exchanges:22, lateReturns:0, disputes:0, suspended:false},
+    {id:'u2', name:'Riya Kapoor', dept:'Comps', year:'2nd Year', trust:88, verified:true, exchanges:15, lateReturns:1, disputes:0, suspended:false},
+    {id:'u3', name:'Kabir Shah', dept:'IT', year:'4th Year', trust:95, verified:true, exchanges:31, lateReturns:0, disputes:0, suspended:false},
+    {id:'u4', name:'Sanya Iyer', dept:'EXTC', year:'1st Year', trust:76, verified:false, exchanges:4, lateReturns:1, disputes:1, suspended:false},
+    {id:'u5', name:'Dev Patel', dept:'Mechanical', year:'3rd Year', trust:84, verified:true, exchanges:12, lateReturns:1, disputes:0, suspended:false},
+    {id:'u6', name:'Ananya Rao', dept:'Comps', year:'2nd Year', trust:90, verified:true, exchanges:19, lateReturns:0, disputes:0, suspended:false},
+    {id:'u7', name:'Yash Verma', dept:'IT', year:'3rd Year', trust:81, verified:true, exchanges:9, lateReturns:2, disputes:1, suspended:false},
+    {id:'u8', name:'Meera Nair', dept:'Civil', year:'2nd Year', trust:87, verified:true, exchanges:14, lateReturns:0, disputes:0, suspended:false},
+  ];
+
+  const YOU = {id:'you', name:'You', dept:'Computer Engg.', year:'3rd Year', trust:84, verified:true, exchanges:12, lateReturns:1, disputes:0, resourcesListed:2, resourcesBorrowed:5, ratingAvg:4.6};
+
+  const RESOURCES = [
+    {id:'r1', name:'DSLR Camera', cat:'Camera', icon:'📷', owner:'u1', condition:'Excellent', available:true, location:'Hostel Block C', distance:0.4, charge:120, deposit:1500, rating:4.8, tags:['video','camera','photo','shoot','content'], accessories:['Battery x2','32GB SD card','Lens hood'], value:42000, timesBorrowed:9, desc:'Entry-level DSLR, great for reels, event coverage and photography assignments.'},
+    {id:'r2', name:'Camera Tripod', cat:'Camera', icon:'🎬', owner:'u1', condition:'Good', available:true, location:'Hostel Block C', distance:0.4, charge:30, deposit:300, rating:4.5, tags:['video','camera','stand','shoot'], accessories:['Phone mount'], value:1800, timesBorrowed:11, desc:'Adjustable aluminium tripod, works with phones and DSLRs.'},
+    {id:'r3', name:'Condenser Microphone', cat:'Audio', icon:'🎙️', owner:'u3', condition:'Excellent', available:true, location:'Block A, Room 214', distance:0.9, charge:60, deposit:800, rating:4.7, tags:['video','audio','mic','shoot','content','event'], accessories:['Pop filter','USB cable'], value:6500, timesBorrowed:6, desc:'USB condenser mic for clean voiceovers, interviews and podcast recording.'},
+    {id:'r4', name:'LED Studio Light Kit', cat:'Lighting', icon:'💡', owner:'u6', condition:'Good', available:true, location:'Girls Hostel Wing 2', distance:1.1, charge:80, deposit:900, rating:4.4, tags:['video','lighting','shoot','content'], accessories:['2 softbox stands'], value:5200, timesBorrowed:5, desc:'Dual softbox LED kit for indoor shoots and reels.'},
+    {id:'r5', name:'Scientific Calculator FX-991', cat:'Study', icon:'🧮', owner:'u4', condition:'Good', available:true, location:'Block B, Room 108', distance:0.3, charge:10, deposit:150, rating:4.6, tags:['calculator','study','exam','assignment'], accessories:['Cover case'], value:1400, timesBorrowed:14, desc:'Standard engineering calculator, ideal for exams and assignments.'},
+    {id:'r6', name:'MacBook Air (Laptop)', cat:'Computing', icon:'💻', owner:'u3', condition:'Excellent', available:false, location:'Block A, Room 214', distance:0.9, charge:150, deposit:5000, rating:4.9, tags:['computing','coding','laptop','project','assignment'], accessories:['Charger'], value:78000, timesBorrowed:3, desc:'Lightweight laptop for coding projects, presentations and submissions.'},
+    {id:'r7', name:'Data Structures Textbook', cat:'Books', icon:'📘', owner:'u2', condition:'Fair', available:true, location:'Girls Hostel Wing 1', distance:0.6, charge:5, deposit:100, rating:4.2, tags:['study','textbook','exam','assignment','coding'], accessories:[], value:650, timesBorrowed:18, desc:'Well-highlighted DS textbook, useful before semester exams.'},
+    {id:'r8', name:'Acoustic Guitar', cat:'Music', icon:'🎸', owner:'u5', condition:'Good', available:true, location:'Boys Hostel Wing 3', distance:1.4, charge:40, deposit:1200, rating:4.5, tags:['instrument','music','event','fest','party'], accessories:['Extra strings','Pick set'], value:8500, timesBorrowed:7, desc:'Full-size acoustic guitar, tuned and ready for open mics and fests.'},
+    {id:'r9', name:'Football', cat:'Sports', icon:'⚽', owner:'u7', condition:'Good', available:true, location:'Sports Complex', distance:0.7, charge:15, deposit:200, rating:4.3, tags:['sports','match','practice'], accessories:['Hand pump'], value:1200, timesBorrowed:21, desc:'Match-quality football for practice sessions and intramurals.'},
+    {id:'r10', name:'Cricket Kit', cat:'Sports', icon:'🏏', owner:'u7', condition:'Fair', available:true, location:'Sports Complex', distance:0.7, charge:35, deposit:600, rating:4.0, tags:['sports','match','practice'], accessories:['Bat','Pads','Gloves'], value:4200, timesBorrowed:8, desc:'Full cricket kit — bat, pads and gloves — for casual matches.'},
+    {id:'r11', name:'Mini Drone', cat:'Camera', icon:'🚁', owner:'u6', condition:'Excellent', available:true, location:'Girls Hostel Wing 2', distance:1.1, charge:200, deposit:3500, rating:4.7, tags:['video','camera','aerial','shoot','content','event'], accessories:['2 batteries','Controller'], value:35000, timesBorrowed:4, desc:'Compact camera drone for aerial event and campus shots.'},
+    {id:'r12', name:'Portable Projector', cat:'Presentation', icon:'📽️', owner:'u8', condition:'Good', available:true, location:'Block D, Room 302', distance:1.8, charge:90, deposit:2000, rating:4.4, tags:['presentation','event','pitch','fest'], accessories:['HDMI cable','Tripod stand'], value:14000, timesBorrowed:6, desc:'Mini LED projector, good for club screenings and pitch presentations.'},
+    {id:'r13', name:'Mountain Bike', cat:'Mobility', icon:'🚲', owner:'u5', condition:'Good', available:true, location:'Boys Hostel Wing 3', distance:1.4, charge:25, deposit:800, rating:4.1, tags:['mobility','commute','travel'], accessories:['Lock'], value:9000, timesBorrowed:10, desc:'Geared bike for getting around campus quickly.'},
+    {id:'r14', name:'Drafter &amp; Engineering Kit', cat:'Study', icon:'📐', owner:'u2', condition:'Good', available:true, location:'Girls Hostel Wing 1', distance:0.6, charge:12, deposit:250, rating:4.3, tags:['study','drafting','assignment'], accessories:['Compass set'], value:900, timesBorrowed:12, desc:'Complete drafter set for engineering drawing submissions.'},
+  ];
+
+  const PENDING_APPROVALS = [
+    {id:'p1', name:'Bluetooth Speaker', cat:'Audio', icon:'🔊', submittedBy:'Yash Verma', charge:35, deposit:500},
+    {id:'p2', name:'Chess Set', cat:'Games', icon:'♟️', submittedBy:'Meera Nair', charge:8, deposit:150},
+  ];
+
+  let requestSeq = 100;
+  let disputeSeq = 50;
+
+  const REQUESTS = [
+    {id:'q1', resourceId:'r1', borrower:'You', ownerName:'Aarav Mehta', days:2, stage:4, /* Borrowed */ createdAt:'2 days ago', dueText:'Due tomorrow, 6 PM', beforeCondition:'Excellent — no visible marks', afterCondition:null, rating:null},
+    {id:'q2', resourceId:'r9', borrower:'You', ownerName:'Yash Verma', days:1, stage:6, /* Returned */ createdAt:'6 days ago', dueText:'Returned on time', beforeCondition:'Good — slight scuff', afterCondition:'Good — same condition', rating:5},
+    {id:'q3', resourceId:'r8', borrower:'You', ownerName:'Dev Patel', days:3, stage:6, /* Returned */ createdAt:'12 days ago', dueText:'Returned 2 days late', beforeCondition:'Good — tuned', afterCondition:'Good — minor string wear', rating:4},
+  ];
+
+  const DISPUTES = [
+    {id:'d1', requestId:'q3', type:'Late Return', desc:'Returned 2 days after the due stage due to exam week.', lateDays:2, status:'Under Review'},
+  ];
+
+  const STAGES = ['Requested','Accepted','Handover','Borrowed','Return Due','Returned'];
+
+  const adminSettings = { platformFeePercent: 6, lateFeePerDay: 25, loggedIn:false };
+
+  /* ============================================================
+     HELPERS
+  ============================================================ */
+  const $ = (sel,ctx)=> (ctx||document).querySelector(sel);
+  const $$ = (sel,ctx)=> Array.from((ctx||document).querySelectorAll(sel));
+  const rupee = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  const byId = (arr,id)=> arr.find(x=>x.id===id);
+  const ownerOf = res => res.owner==='you' ? YOU : byId(OWNERS,res.owner);
+
+  function toast(msg, tone){
+    const stack = $('#toastStack');
+    const el = document.createElement('div');
+    el.className='toast';
+    if(tone==='danger') el.style.borderLeftColor='var(--coral)';
+    if(tone==='good') el.style.borderLeftColor='var(--mint)';
+    el.textContent = msg;
+    stack.appendChild(el);
+    setTimeout(()=> el.remove(), 3900);
+  }
+
+  function starString(rating){
+    const full = Math.round(rating);
+    return '★★★★★'.slice(0,full) + '☆☆☆☆☆'.slice(0, 5-full);
+  }
+
+  function feeFor(borrowCharge){
+    return borrowCharge * (adminSettings.platformFeePercent/100);
+  }
+
+  /* ============================================================
+     NAV / VIEW SWITCHING
+  ============================================================ */
+  const tabbar = $('#tabbar');
+  const indicator = $('#tabIndicator');
+
+  function placeIndicator(btn){
+    const barRect = tabbar.getBoundingClientRect();
+    const r = btn.getBoundingClientRect();
+    indicator.style.transform = `translateX(${r.left - barRect.left}px)`;
+    indicator.style.width = r.width + 'px';
+  }
+
+  function switchView(name){
+    document.body.dataset.view = name;
+    $$('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.view===name));
+    $$('.view').forEach(v=> v.classList.remove('active'));
+    $('#view-'+name).classList.add('active');
+    const activeBtn = $(`.tab-btn[data-view="${name}"]`);
+    if(activeBtn) placeIndicator(activeBtn);
+    window.scrollTo({top:0, behavior:'smooth'});
+    if(name==='requests') renderRequests();
+    if(name==='profile') renderProfile();
+    if(name==='fees') renderFees();
+    if(name==='impact') renderImpact();
+    if(name==='admin') renderAdmin();
+  }
+
+  $$('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> switchView(btn.dataset.view));
+  });
+  document.addEventListener('click', e=>{
+    const g = e.target.closest('[data-goto]');
+    if(g) switchView(g.dataset.goto);
+  });
+  window.addEventListener('resize', ()=>{
+    const activeBtn = $('.tab-btn.active');
+    if(activeBtn) placeIndicator(activeBtn);
+  });
+
+  /* ============================================================
+     HERO RING (signature element)
+  ============================================================ */
+  function buildHeroRing(){
+    const orbit = $('#heroOrbit');
+    const icons = ['📷','🎙️','💡','🎸','⚽','💻'];
+    const n = icons.length;
+    const radius = 150;
+    icons.forEach((icon,i)=>{
+      const angle = (360/n)*i;
+      const rad = angle * Math.PI/180;
+      const x = 150 + radius*Math.cos(rad) - 26;
+      const y = 150 + radius*Math.sin(rad) - 26;
+      const el = document.createElement('div');
+      el.className='orbit-icon floaty';
+      el.style.left = x+'px';
+      el.style.top = y+'px';
+      el.style.animationDelay = (i*0.3)+'s, '+(i*0.4)+'s';
+      el.textContent = icon;
+      orbit.appendChild(el);
+    });
+  }
+
+  /* ============================================================
+     DISCOVER VIEW
+  ============================================================ */
+  const state = { search:'', category:'', sort:'rating', availOnly:false };
+
+  function populateCategoryFilter(){
+    const cats = Array.from(new Set(RESOURCES.map(r=>r.cat))).sort();
+    const sel = $('#categoryFilter');
+    cats.forEach(c=>{
+      const o = document.createElement('option');
+      o.value=c; o.textContent=c;
+      sel.appendChild(o);
+    });
+  }
+
+  function filteredResources(){
+    let list = RESOURCES.slice();
+    if(state.search){
+      const q = state.search.toLowerCase();
+      list = list.filter(r=> r.name.toLowerCase().includes(q) || r.cat.toLowerCase().includes(q) || r.desc.toLowerCase().includes(q) || r.tags.some(t=>t.includes(q)));
+    }
+    if(state.category) list = list.filter(r=> r.cat===state.category);
+    if(state.availOnly) list = list.filter(r=> r.available);
+    if(state.sort==='rating') list.sort((a,b)=> b.rating-a.rating);
+    if(state.sort==='distance') list.sort((a,b)=> a.distance-b.distance);
+    if(state.sort==='price-asc') list.sort((a,b)=> a.charge-b.charge);
+    if(state.sort==='price-desc') list.sort((a,b)=> b.charge-a.charge);
+    return list;
+  }
+
+  function resourceCardHTML(r, small){
+    const owner = ownerOf(r);
+    const suspended = owner && owner.suspended;
+    return `
+    <div class="res-card ${small?'mini-card':''}" data-id="${r.id}">
+      <div class="res-icon">${r.icon}</div>
+      <div class="res-top">
+        <span class="res-cat">${r.cat}</span>
+        <span class="badge-avail ${r.available && !suspended ? 'yes':'no'}">${suspended ? 'Suspended owner' : (r.available ? 'Available' : 'Borrowed')}</span>
+      </div>
+      <div class="res-name">${r.name}</div>
+      <div class="res-owner"><span class="trust-dot"></span>${owner ? owner.name : '—'} · Trust ${owner ? owner.trust : '—'}</div>
+      <div class="stars">${starString(r.rating)} <span style="color:var(--text-faint); font-family:var(--font-mono);">${r.rating}</span></div>
+      <div class="res-meta">
+        <span>${r.condition}</span>
+        <span>${r.distance} km away</span>
+        <span>${r.location}</span>
+      </div>
+      <div class="res-price">
+        <div><b>${rupee(r.charge)}</b><small>per day + ${rupee(r.deposit)} deposit</small></div>
+        <button class="btn btn-sm btn-ghost" data-view-resource="${r.id}">View</button>
+      </div>
+    </div>`;
+  }
+
+  function renderDiscover(){
+    const grid = $('#resourceGrid');
+    const list = filteredResources();
+    grid.innerHTML = list.map(r=>resourceCardHTML(r,false)).join('') || `<div class="empty-state">No resources match those filters yet. Try clearing a filter.</div>`;
+    $$('.res-card', grid).forEach((el,i)=>{
+      setTimeout(()=> el.classList.add('reveal'), i*40);
+    });
+    $('#resultCount').textContent = list.length + ' listed';
+
+    const rec = RESOURCES.slice().sort((a,b)=> (b.rating - a.distance*0.3) - (a.rating - b.distance*0.3)).slice(0,7);
+    $('#recommendedRow').innerHTML = rec.map(r=>resourceCardHTML(r,true)).join('');
+
+    const members = new Set(RESOURCES.map(r=>r.owner)).size + 1;
+    const successful = REQUESTS.filter(q=>q.stage===6).length;
+    $('#heroStats').innerHTML = `
+      <div class="hero-stat"><b>${RESOURCES.length}</b><span>Active listings</span></div>
+      <div class="hero-stat"><b>${members}</b><span>Trusted members</span></div>
+      <div class="hero-stat"><b>${successful+34}</b><span>Successful exchanges</span></div>`;
+    $('#heroCoreNum').textContent = RESOURCES.filter(r=>r.available).length;
+  }
+
+  $('#searchInput').addEventListener('input', e=>{ state.search=e.target.value; renderDiscover(); });
+  $('#categoryFilter').addEventListener('change', e=>{ state.category=e.target.value; renderDiscover(); });
+  $('#sortFilter').addEventListener('change', e=>{ state.sort=e.target.value; renderDiscover(); });
+  $('#availOnlyToggle').addEventListener('click', e=>{
+    state.availOnly = !state.availOnly;
+    e.target.classList.toggle('on', state.availOnly);
+    renderDiscover();
+  });
+  $('#btnBrowse').addEventListener('click', ()=> $('#resourceGrid').scrollIntoView({behavior:'smooth'}));
+
+  document.addEventListener('click', e=>{
+    const btn = e.target.closest('[data-view-resource]');
+    if(btn) openResourceModal(btn.dataset.viewResource);
+  });
+
+  /* ============================================================
+     RESOURCE MODAL (request-to-borrow flow)
+  ============================================================ */
+  function openResourceModal(id){
+    const r = byId(RESOURCES,id);
+    if(!r) return;
+    const owner = ownerOf(r);
+    const backdrop = $('#modalBackdrop');
+    const box = $('#modalBox');
+    box.innerHTML = `
+      <button class="modal-close" data-close-modal>✕</button>
+      <div style="font-size:2.4rem;">${r.icon}</div>
+      <h2 style="margin-top:8px;">${r.name}</h2>
+      <div class="res-owner" style="margin:6px 0 12px;"><span class="trust-dot"></span>${owner.name} · ${owner.dept}, ${owner.year} · Trust score ${owner.trust}</div>
+      <p>${r.desc}</p>
+      <div class="res-meta" style="margin:14px 0;">
+        <span>Condition: ${r.condition}</span>
+        <span>${r.distance} km · ${r.location}</span>
+        <span>${starString(r.rating)} ${r.rating}</span>
+      </div>
+      <div class="field"><label>Included accessories</label><div>${r.accessories.length ? r.accessories.join(', ') : 'None listed'}</div></div>
+
+      ${r.available ? `
+      <div class="row2">
+        <div class="field"><label>Borrow duration (days)</label><input type="number" id="modalDays" value="1" min="1" max="14"></div>
+        <div class="field"><label>Est. retail value</label><input type="text" value="${rupee(r.value)}" disabled></div>
+      </div>
+      <div class="breakdown" id="modalBreakdown"></div>
+      <button class="btn btn-primary btn-block" style="margin-top:16px;" id="confirmRequestBtn">Request to borrow</button>
+      ` : `<div class="empty-state">This item is currently borrowed. Try an alternative in Discover, or ask the AI Assistant.</div>`}
+    `;
+    backdrop.classList.add('open');
+
+    if(r.available){
+      const daysInput = $('#modalDays');
+      const recalc = ()=>{
+        const days = Math.max(1, parseInt(daysInput.value||'1',10));
+        const borrowCharge = r.charge*days;
+        const fee = feeFor(borrowCharge);
+        const total = borrowCharge + fee + r.deposit;
+        $('#modalBreakdown').innerHTML = `
+          <div class="line"><span>Borrowing charge (${days} × ${rupee(r.charge)})</span><span>${rupee(borrowCharge)}</span></div>
+          <div class="line"><span>Platform fee (${adminSettings.platformFeePercent}%)</span><span>${rupee(fee)}</span></div>
+          <div class="line"><span>Security deposit (refundable)</span><span>${rupee(r.deposit)}</span></div>
+          <div class="line total"><span>Transaction amount</span><span>${rupee(total)}</span></div>`;
+      };
+      daysInput.addEventListener('input', recalc);
+      recalc();
+
+      $('#confirmRequestBtn').addEventListener('click', ()=>{
+        requestSeq++;
+        REQUESTS.unshift({
+          id:'q'+requestSeq, resourceId:r.id, borrower:'You', ownerName:owner.name,
+          days: Math.max(1, parseInt(daysInput.value||'1',10)), stage:1,
+          createdAt:'just now', dueText:'Awaiting owner acceptance', beforeCondition:null, afterCondition:null, rating:null
+        });
+        closeModal();
+        toast('Request sent to '+owner.name+' — track it under My Requests.', 'good');
+        switchView('requests');
+      });
+    }
+  }
+
+  function closeModal(){ $('#modalBackdrop').classList.remove('open'); }
+  document.addEventListener('click', e=>{
+    if(e.target.id==='modalBackdrop' || e.target.closest('[data-close-modal]')) closeModal();
+  });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+  /* ============================================================
+     AI ASSISTANT
+  ============================================================ */
+  const AI_RULES = [
+    {keys:['reel','video','content','shoot','film','vlog'], tags:['video','camera','audio','lighting'], reason:'You mentioned recording video content, so here is a shoot-ready bundle:'},
+    {keys:['event','fest','party','function'], tags:['event','music','instrument','presentation'], reason:'For an event like this, these are commonly borrowed together:'},
+    {keys:['exam','assignment','study','submission'], tags:['study','textbook','calculator','drafting'], reason:'For study or submission needs, these are the closest matches:'},
+    {keys:['project','coding','code','laptop'], tags:['computing','coding'], reason:'For a coding project, these should help:'},
+    {keys:['sport','match','practice','game'], tags:['sports'], reason:'For sports practice, these are available nearby:'},
+    {keys:['pitch','presentation','demo'], tags:['presentation'], reason:'For a presentation, this should work well:'},
+    {keys:['travel','commute','ride'], tags:['mobility'], reason:'For getting around campus quickly:'},
+  ];
+
+  const EXAMPLES = [
+    'I need to make a reel for my club event tomorrow',
+    'I have a DS exam next week and need to revise',
+    'Hosting a farewell party this weekend',
+    'Need a laptop to finish a coding assignment',
+  ];
+  $('#aiExamples').innerHTML = EXAMPLES.map(x=>`<button class="example-chip" data-fill="${x}">${x}</button>`).join('');
+  document.addEventListener('click', e=>{
+    const chip = e.target.closest('[data-fill]');
+    if(chip){ $('#aiQuery').value = chip.dataset.fill; runAI(); }
+  });
+  $('#aiSubmit').addEventListener('click', runAI);
+
+  function runAI(){
+    const raw = $('#aiQuery').value.trim();
+    const resultBox = $('#aiResult');
+    if(!raw){ toast('Describe what you need first.'); return; }
+    const q = raw.toLowerCase();
+    let matchedRule = AI_RULES.find(rule=> rule.keys.some(k=> q.includes(k)));
+    let matches, reason;
+    if(matchedRule){
+      matches = RESOURCES.filter(r=> r.tags.some(t=> matchedRule.tags.includes(t)));
+      reason = matchedRule.reason;
+    }else{
+      matches = RESOURCES.filter(r=> q.split(/\\s+/).some(w=> w.length>2 && (r.name.toLowerCase().includes(w) || r.tags.some(t=>t.includes(w)))));
+      reason = matches.length ? 'Closest matches for your request:' : '';
+    }
+    matches = matches.sort((a,b)=> (b.available - a.available) || (b.rating-a.rating) || (a.distance-b.distance)).slice(0,6);
+
+    if(!matches.length){
+      resultBox.innerHTML = `<div class="empty-state">No close match yet — try rephrasing, or browse Discover directly.</div>`;
+      return;
+    }
+    resultBox.innerHTML = `<div class="ai-reason">✦ ${reason}</div><div class="grid">${matches.map(r=>resourceCardHTML(r,false)).join('')}</div>`;
+    $$('.res-card', resultBox).forEach((el,i)=> setTimeout(()=> el.classList.add('reveal'), i*60));
+  }
+
+  /* ============================================================
+     MY REQUESTS + DISPUTES
+  ============================================================ */
+  function stepperHTML(stageIndex){
+    return `<div class="stepper">` + STAGES.map((s,i)=>{
+      const idx = i+1;
+      const cls = idx < stageIndex ? 'done' : (idx===stageIndex ? 'current' : '');
+      return `<div class="step ${cls}"><div class="dot"></div><div class="lbl">${s}</div></div>`;
+    }).join('') + `</div>`;
+  }
+
+  function renderRequests(){
+    const wrap = $('#requestsList');
+    if(!REQUESTS.length){ wrap.innerHTML = `<div class="empty-state">No requests yet — go borrow something from Discover.</div>`; return; }
+    wrap.innerHTML = REQUESTS.map(q=>{
+      const r = byId(RESOURCES, q.resourceId);
+      if(!r) return '';
+      const stageName = STAGES[q.stage-1];
+      const canAdvance = q.stage < 6;
+      const dispute = DISPUTES.find(d=> d.requestId===q.id);
+      return `
+      <div class="req-card">
+        <div class="req-head">
+          <div><span class="req-icon">${r.icon}</span><strong>${r.name}</strong> <span class="hint">· from ${q.ownerName}</span>
+            ${dispute ? `<div style="margin-top:6px;"><span class="dispute-tag">${dispute.type} — ${dispute.status}</span></div>` : ''}
+          </div>
+          <div style="text-align:right;">
+            <div class="hint">${q.createdAt}</div>
+            <div style="font-family:var(--font-mono); font-size:.8rem; color:var(--accent);">${stageName}</div>
+          </div>
+        </div>
+        ${stepperHTML(q.stage)}
+        <div class="hint" style="margin-top:8px;">${q.dueText}</div>
+        ${q.afterCondition ? `<div class="settle-box"><b>Settled.</b> Before: ${q.beforeCondition}. After: ${q.afterCondition}. ${q.rating? 'You rated this exchange '+q.rating+'/5.' : ''}</div>` : ''}
+        <div class="req-actions">
+          ${canAdvance ? `<button class="btn btn-sm btn-primary" data-advance="${q.id}">Advance to ${STAGES[q.stage]}</button>` : ''}
+          ${q.stage>=3 && q.stage<6 && !dispute ? `<button class="btn btn-sm btn-danger" data-dispute="${q.id}">Report late / damage</button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    renderDisputesList();
+  }
+
+  document.addEventListener('click', e=>{
+    const adv = e.target.closest('[data-advance]');
+    if(adv){ advanceRequest(adv.dataset.advance); }
+    const dis = e.target.closest('[data-dispute]');
+    if(dis){ openDisputeModal(dis.dataset.dispute); }
+  });
+
+  function advanceRequest(id){
+    const q = byId(REQUESTS, id);
+    if(!q || q.stage>=6) return;
+    q.stage += 1;
+    if(q.stage===3) q.beforeCondition = 'Logged at handover — Good, no visible damage';
+    if(q.stage===4) q.dueText = 'Due in '+q.days+' day(s) from handover';
+    if(q.stage===5) q.dueText = 'Return window open — hand it back to close this out';
+    if(q.stage===6){
+      q.dueText = 'Returned and settled';
+      q.afterCondition = 'Good — condition matches handover notes';
+      q.rating = 5;
+      const r = byId(RESOURCES, q.resourceId);
+      if(r) r.timesBorrowed += 1;
+    }
+    toast('Moved "'+byId(RESOURCES,q.resourceId).name+'" to '+STAGES[q.stage-1]+'.', 'good');
+    renderRequests();
+  }
+
+  function openDisputeModal(reqId){
+    const q = byId(REQUESTS, reqId);
+    const r = byId(RESOURCES, q.resourceId);
+    const backdrop = $('#modalBackdrop');
+    const box = $('#modalBox');
+    box.innerHTML = `
+      <button class="modal-close" data-close-modal>✕</button>
+      <h2>Report an issue</h2>
+      <p>${r.name} · borrowed from ${q.ownerName}</p>
+      <div class="field"><label>Issue type</label>
+        <select id="disputeType"><option>Late Return</option><option>Damage</option><option>Both</option></select>
+      </div>
+      <div class="field"><label>Days late (if any)</label><input type="number" id="disputeLateDays" value="0" min="0" max="30"></div>
+      <div class="field"><label>Describe what happened</label><textarea id="disputeDesc" rows="3" placeholder="Add evidence details, condition notes, timeline…"></textarea></div>
+      <div class="field"><label>Attach evidence (photo, optional)</label><input type="file" id="disputeFile"></div>
+      <div class="breakdown" id="disputeBreakdown"></div>
+      <button class="btn btn-primary btn-block" style="margin-top:14px;" id="submitDisputeBtn">Submit for review</button>
+    `;
+    backdrop.classList.add('open');
+
+    const lateInput = $('#disputeLateDays');
+    const recalc = ()=>{
+      const days = Math.max(0, parseInt(lateInput.value||'0',10));
+      const fee = days*adminSettings.lateFeePerDay;
+      $('#disputeBreakdown').innerHTML = `<div class="line"><span>Late fee (${days} × ${rupee(adminSettings.lateFeePerDay)})</span><span>${rupee(fee)}</span></div><div class="line total"><span>Added to final settlement</span><span>${rupee(fee)}</span></div>`;
+    };
+    lateInput.addEventListener('input', recalc);
+    recalc();
+
+    $('#submitDisputeBtn').addEventListener('click', ()=>{
+      disputeSeq++;
+      DISPUTES.unshift({
+        id:'d'+disputeSeq, requestId:q.id,
+        type:$('#disputeType').value,
+        desc:$('#disputeDesc').value || 'No additional details provided.',
+        lateDays: Math.max(0, parseInt(lateInput.value||'0',10)),
+        status:'Submitted'
+      });
+      closeModal();
+      toast('Dispute submitted — status: Under review.', 'danger');
+      renderRequests();
+    });
+  }
+
+  function renderDisputesList(){
+    const wrap = $('#disputesList');
+    if(!DISPUTES.length){ wrap.innerHTML = `<div class="empty-state">No disputes raised. Clean record!</div>`; return; }
+    wrap.innerHTML = DISPUTES.map(d=>{
+      const q = byId(REQUESTS, d.requestId);
+      const r = q ? byId(RESOURCES, q.resourceId) : null;
+      const fee = d.lateDays * adminSettings.lateFeePerDay;
+      return `<div class="req-card">
+        <div class="req-head">
+          <div><strong>${r ? r.name : 'Resource'}</strong> <span class="hint">· ${d.type}</span></div>
+          <span class="dispute-tag">${d.status}</span>
+        </div>
+        <p style="margin-top:8px;">${d.desc}</p>
+        ${d.lateDays>0 ? `<div class="settle-box"><b>Late fee applied:</b> ${rupee(fee)} (${d.lateDays} day(s) × ${rupee(adminSettings.lateFeePerDay)})</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  /* ============================================================
+     TRUST PROFILE
+  ============================================================ */
+  function renderProfile(){
+    const badges = [];
+    if(YOU.verified) badges.push('Verified Student');
+    if(YOU.trust>=80) badges.push('Trusted Member');
+    if(YOU.exchanges>=10) badges.push('Power Sharer');
+    if(YOU.lateReturns<=1) badges.push('Reliable Returner');
+
+    const circumference = 2*Math.PI*70;
+    const offset = circumference * (1 - YOU.trust/100);
+
+    $('#profileCard').innerHTML = `
+      <div class="gauge-wrap">
+        <svg width="180" height="180" viewBox="0 0 180 180">
+          <circle cx="90" cy="90" r="70" fill="none" stroke="var(--surface-2)" stroke-width="14"></circle>
+          <circle cx="90" cy="90" r="70" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round"
+            stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" transform="rotate(-90 90 90)"
+            style="transition:stroke-dashoffset 1.2s cubic-bezier(.22,.9,.35,1);"></circle>
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="var(--accent)"></stop>
+              <stop offset="100%" stop-color="var(--accent-2)"></stop>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="gauge-num">${YOU.trust}</div>
+        <span class="hint">Trust score</span>
+        <h3 style="margin-top:14px;">${YOU.name}</h3>
+        <p>${YOU.dept} · ${YOU.year} ${YOU.verified ? '· ✅ Verified' : ''}</p>
+      </div>
+      <div class="stat-mini-grid">
+        <div class="stat-mini"><b>${YOU.exchanges}</b><span>Exchanges</span></div>
+        <div class="stat-mini"><b>${YOU.ratingAvg}</b><span>Avg rating</span></div>
+        <div class="stat-mini"><b>${YOU.lateReturns}</b><span>Late returns</span></div>
+        <div class="stat-mini"><b>${YOU.disputes}</b><span>Disputes</span></div>
+        <div class="stat-mini"><b>${YOU.resourcesListed}</b><span>Listed by you</span></div>
+        <div class="stat-mini"><b>${YOU.resourcesBorrowed}</b><span>Borrowed by you</span></div>
+      </div>
+      <div class="badge-row">${badges.map(b=>`<span class="badge-pill">${b}</span>`).join('')}</div>
+    `;
+
+    const board = [...OWNERS, YOU].sort((a,b)=> b.trust-a.trust).slice(0,8);
+    $('#leaderboard').innerHTML = board.map((u,i)=> `
+      <div class="leader-row">
+        <span><span class="rank">${i+1}.</span>${u.name}${u.name==='You' ? ' (you)' : ''}</span>
+        <span style="font-family:var(--font-mono);">${u.trust}</span>
+      </div>`).join('');
+  }
+
+  /* ============================================================
+     FEE CALCULATOR
+  ============================================================ */
+  function populateFeeResourceSelect(){
+    const sel = $('#feeResource');
+    sel.innerHTML = RESOURCES.map(r=> `<option value="${r.id}">${r.name} — ${rupee(r.charge)}/day</option>`).join('');
+  }
+  function renderFees(){
+    $('#feePercentDisplay').value = adminSettings.platformFeePercent + '% of borrowing charge';
+    calcFees();
+  }
+  function calcFees(){
+    const r = byId(RESOURCES, $('#feeResource').value) || RESOURCES[0];
+    const days = Math.max(1, parseInt($('#feeDays').value||'1',10));
+    const borrowCharge = r.charge*days;
+    const fee = feeFor(borrowCharge);
+    const total = borrowCharge + fee + r.deposit;
+    $('#feeTotal').textContent = rupee(total);
+    $('#feeBreakdown').innerHTML = `
+      <div class="line"><span>Borrowing charge (${days} × ${rupee(r.charge)})</span><span>${rupee(borrowCharge)}</span></div>
+      <div class="line"><span>Platform fee (${adminSettings.platformFeePercent}%)</span><span>${rupee(fee)}</span></div>
+      <div class="line"><span>Security deposit (refundable)</span><span>${rupee(r.deposit)}</span></div>
+      <div class="line total"><span>Transaction amount</span><span>${rupee(total)}</span></div>`;
+  }
+  $('#feeResource') && $('#feeResource').addEventListener('change', calcFees);
+  $('#feeDays') && $('#feeDays').addEventListener('input', calcFees);
+
+  /* ============================================================
+     IMPACT DASHBOARD
+  ============================================================ */
+  function renderImpact(){
+    const members = new Set(RESOURCES.map(r=>r.owner)).size + 1;
+    const successfulExchanges = REQUESTS.filter(q=>q.stage===6).length + 34;
+    const activeExchanges = REQUESTS.filter(q=>q.stage<6).length;
+    const moneySaved = RESOURCES.reduce((sum,r)=> sum + r.value*0.015*r.timesBorrowed, 0) + 186000;
+    const reused = RESOURCES.reduce((sum,r)=> sum+r.timesBorrowed, 0);
+    const settled = REQUESTS.filter(q=>q.stage===6);
+    const onTime = settled.length ? Math.round(100 * settled.filter(q=> !DISPUTES.find(d=>d.requestId===q.id && d.type!=='Damage')).length / settled.length) : 96;
+
+    $('#impactStats').innerHTML = `
+      <div class="stat-card"><b>${members}</b><span>Active members</span></div>
+      <div class="stat-card"><b>${RESOURCES.length}</b><span>Resources shared</span></div>
+      <div class="stat-card"><b>${successfulExchanges}</b><span>Successful exchanges</span></div>
+      <div class="stat-card"><b>${activeExchanges}</b><span>Currently circulating</span></div>
+    `;
+
+    const tally = {};
+    RESOURCES.forEach(r=> tally[r.cat] = (tally[r.cat]||0)+1);
+    const max = Math.max(...Object.values(tally));
+    const chartHTML = Object.entries(tally).sort((a,b)=>b[1]-a[1]).map(([cat,count])=> `
+      <div class="bar-row">
+        <span>${cat}</span>
+        <div class="bar-track"><div class="bar-fill" data-w="${(count/max*100)}"></div></div>
+        <span style="text-align:right; font-family:var(--font-mono);">${count}</span>
+      </div>`).join('');
+    $('#categoryChart').innerHTML = chartHTML;
+    setTimeout(()=> $$('.bar-fill').forEach(b=> b.style.width = b.dataset.w+'%'), 60);
+
+    $('#onTimeRate').textContent = onTime+'%';
+    $('#moneySaved').textContent = rupee(moneySaved);
+    $('#reusedCount').textContent = reused;
+  }
+
+  /* ============================================================
+     ADMIN
+  ============================================================ */
+  let adminSub = 'overview';
+
+  function renderAdmin(){
+    const area = $('#adminArea');
+    if(!adminSettings.loggedIn){
+      area.innerHTML = `
+        <div class="card login-card">
+          <h3>Admin sign-in</h3>
+          <p style="margin:10px 0 16px;">Demo login — enter any username, and password <b>admin</b>.</p>
+          <div class="field"><input type="text" id="adminUser" placeholder="Username"></div>
+          <div class="field"><input type="password" id="adminPass" placeholder="Password"></div>
+          <button class="btn btn-primary btn-block" id="adminLoginBtn">Sign in</button>
+        </div>`;
+      $('#adminLoginBtn').addEventListener('click', ()=>{
+        const u = $('#adminUser').value.trim();
+        const p = $('#adminPass').value;
+        if(!u || p!=='admin'){ toast('Enter a username and password "admin".', 'danger'); return; }
+        adminSettings.loggedIn = true;
+        toast('Welcome back, admin.', 'good');
+        renderAdmin();
+      });
+      return;
+    }
+
+    const subtabs = [['overview','Overview'],['approvals','Approvals'],['disputes','Disputes'],['users','Users'],['fees','Fee settings'],['transactions','Transactions']];
+    area.innerHTML = `
+      <div class="subtabs">
+        ${subtabs.map(([k,l])=> `<button class="subtab-btn ${adminSub===k?'active':''}" data-sub="${k}">${l}</button>`).join('')}
+        <button class="btn btn-sm btn-ghost" style="margin-left:auto;" id="adminLogout">Log out</button>
+      </div>
+      <div id="adminSubArea"></div>
+    `;
+    $$('[data-sub]').forEach(b=> b.addEventListener('click', ()=>{ adminSub=b.dataset.sub; renderAdmin(); }));
+    $('#adminLogout').addEventListener('click', ()=>{ adminSettings.loggedIn=false; renderAdmin(); });
+
+    const sub = $('#adminSubArea');
+    if(adminSub==='overview'){
+      const revenue = REQUESTS.reduce((sum,q)=>{
+        const r = byId(RESOURCES,q.resourceId);
+        return r ? sum + feeFor(r.charge*q.days) : sum;
+      },0);
+      const overdue = REQUESTS.filter(q=>q.stage===5).length;
+      sub.innerHTML = `
+        <div class="stat-card-grid">
+          <div class="stat-card"><b>${OWNERS.length+1}</b><span>Total users</span></div>
+          <div class="stat-card"><b>${RESOURCES.length}</b><span>Total resources</span></div>
+          <div class="stat-card"><b>${REQUESTS.filter(q=>q.stage<6).length}</b><span>Active exchanges</span></div>
+          <div class="stat-card"><b>${DISPUTES.filter(d=>d.status!=='Resolved').length}</b><span>Open disputes</span></div>
+          <div class="stat-card"><b>${overdue}</b><span>Overdue returns</span></div>
+          <div class="stat-card"><b>${rupee(revenue)}</b><span>Platform fee revenue</span></div>
+        </div>`;
+    }
+    if(adminSub==='approvals'){
+      sub.innerHTML = PENDING_APPROVALS.length ? PENDING_APPROVALS.map(p=> `
+        <div class="req-card">
+          <div class="req-head">
+            <div><span class="req-icon">${p.icon}</span><strong>${p.name}</strong> <span class="hint">· ${p.cat} · submitted by ${p.submittedBy}</span></div>
+            <div style="font-family:var(--font-mono);">${rupee(p.charge)}/day</div>
+          </div>
+          <div class="req-actions">
+            <button class="btn btn-sm btn-primary" data-approve="${p.id}">Approve</button>
+            <button class="btn btn-sm btn-danger" data-reject="${p.id}">Reject</button>
+          </div>
+        </div>`).join('') : `<div class="empty-state">No pending listings to review.</div>`;
+    }
+    if(adminSub==='disputes'){
+      sub.innerHTML = DISPUTES.length ? DISPUTES.map(d=>{
+        const q = byId(REQUESTS,d.requestId);
+        const r = q ? byId(RESOURCES,q.resourceId) : null;
+        return `<div class="req-card">
+          <div class="req-head">
+            <div><strong>${r?r.name:'Resource'}</strong> <span class="hint">· ${d.type} · ${q?q.borrower:''}</span></div>
+            <span class="dispute-tag">${d.status}</span>
+          </div>
+          <p style="margin-top:8px;">${d.desc}</p>
+          ${d.status!=='Resolved' ? `<div class="req-actions"><button class="btn btn-sm btn-primary" data-resolve="${d.id}">Mark resolved</button></div>` : ''}
+        </div>`;
+      }).join('') : `<div class="empty-state">No disputes on record.</div>`;
+    }
+    if(adminSub==='users'){
+      const all = [...OWNERS];
+      sub.innerHTML = `<div class="card">` + all.map(u=> `
+        <div class="user-row">
+          <span>${u.name} <span class="hint">· ${u.dept}, ${u.year} · Trust ${u.trust}</span> ${u.suspended?'<span class="suspended-tag">Suspended</span>':''}</span>
+          <button class="btn btn-sm ${u.suspended?'btn-ghost':'btn-danger'}" data-toggle-suspend="${u.id}">${u.suspended?'Reinstate':'Suspend'}</button>
+        </div>`).join('') + `</div>`;
+    }
+    if(adminSub==='fees'){
+      sub.innerHTML = `
+        <div class="card">
+          <h3>Platform fee</h3>
+          <div class="slider-row" style="margin:14px 0;">
+            <input type="range" id="feeSlider" min="0" max="15" value="${adminSettings.platformFeePercent}">
+            <span style="font-family:var(--font-mono); width:52px;" id="feeSliderVal">${adminSettings.platformFeePercent}%</span>
+          </div>
+          <p>Applied instantly to every new borrowing request and the Fee Calculator tab.</p>
+          <h3 style="margin-top:22px;">Late fee (per day)</h3>
+          <div class="field" style="max-width:220px;"><input type="number" id="lateFeeInput" value="${adminSettings.lateFeePerDay}" min="0"></div>
+        </div>`;
+      $('#feeSlider').addEventListener('input', e=>{
+        adminSettings.platformFeePercent = parseInt(e.target.value,10);
+        $('#feeSliderVal').textContent = adminSettings.platformFeePercent+'%';
+      });
+      $('#lateFeeInput').addEventListener('input', e=>{
+        adminSettings.lateFeePerDay = Math.max(0, parseInt(e.target.value||'0',10));
+      });
+    }
+    if(adminSub==='transactions'){
+      sub.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>Resource</th><th>Borrower</th><th>Days</th><th>Charge</th><th>Platform fee</th><th>Deposit</th><th>Total</th><th>Status</th></tr></thead>
+        <tbody>${REQUESTS.map(q=>{
+          const r = byId(RESOURCES,q.resourceId);
+          if(!r) return '';
+          const charge = r.charge*q.days;
+          const fee = feeFor(charge);
+          const total = charge+fee+r.deposit;
+          return `<tr><td>${r.name}</td><td>${q.borrower}</td><td>${q.days}</td><td>${rupee(charge)}</td><td>${rupee(fee)}</td><td>${rupee(r.deposit)}</td><td>${rupee(total)}</td><td>${STAGES[q.stage-1]}</td></tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+    }
+  }
+
+  document.addEventListener('click', e=>{
+    const app = e.target.closest('[data-approve]');
+    if(app){
+      const idx = PENDING_APPROVALS.findIndex(p=>p.id===app.dataset.approve);
+      if(idx>-1){
+        const p = PENDING_APPROVALS[idx];
+        RESOURCES.push({id:'r'+(RESOURCES.length+1), name:p.name, cat:p.cat, icon:p.icon, owner:'u7', condition:'Good', available:true, location:'Campus', distance:1.0, charge:p.charge, deposit:p.deposit, rating:4.0, tags:[p.cat.toLowerCase()], accessories:[], value:p.charge*40, timesBorrowed:0, desc:'Newly approved community listing.'});
+        PENDING_APPROVALS.splice(idx,1);
+        toast(p.name+' approved and now live in Discover.', 'good');
+        renderAdmin();
+      }
+    }
+    const rej = e.target.closest('[data-reject]');
+    if(rej){
+      const idx = PENDING_APPROVALS.findIndex(p=>p.id===rej.dataset.reject);
+      if(idx>-1){ const p=PENDING_APPROVALS[idx]; PENDING_APPROVALS.splice(idx,1); toast(p.name+' rejected.', 'danger'); renderAdmin(); }
+    }
+    const res = e.target.closest('[data-resolve]');
+    if(res){
+      const d = byId(DISPUTES, res.dataset.resolve);
+      if(d){ d.status='Resolved'; toast('Dispute resolved.', 'good'); renderAdmin(); }
+    }
+    const sus = e.target.closest('[data-toggle-suspend]');
+    if(sus){
+      const u = byId(OWNERS, sus.dataset.toggleSuspend);
+      if(u){ u.suspended = !u.suspended; toast(u.name+(u.suspended?' suspended.':' reinstated.'), u.suspended?'danger':'good'); renderAdmin(); }
+    }
+  });
+
+  /* ============================================================
+     INIT
+  ============================================================ */
+  function init(){
+    buildHeroRing();
+    populateCategoryFilter();
+    populateFeeResourceSelect();
+    renderDiscover();
+    placeIndicator($('.tab-btn.active'));
+  }
+  document.addEventListener('DOMContentLoaded', init);
+  if(document.readyState==='complete' || document.readyState==='interactive'){ init(); }
+})();
+</script>
+</body>
+</html>

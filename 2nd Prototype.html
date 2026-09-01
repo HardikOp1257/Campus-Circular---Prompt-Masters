@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Campus Circular — From Ownership to Access</title>
+<link href="https://db.onlinewebfonts.com/c/13ab13418f633c1b0516fed6e30bedbc?family=Suisse+Int%27l" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{
+    --bg:#080A19;
+    --card-glass:rgba(17,16,15,0.35);
+    --card-glass-strong:rgba(17,16,15,0.6);
+    --nav-glass:rgba(10,7,7,0.35);
+    --auth-glass:rgba(0,0,0,0.35);
+    --light:#E9E9E9;
+    --light-text:#0A0707;
+    --gold:#E7B65C;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    font-family:'Suisse Intl', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    color:#fff;
+  }
+
+  @keyframes fade-up{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes fade-down{from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes fade-left{from{opacity:0;transform:translateX(-20px);}to{opacity:1;transform:translateX(0);}}
+  @keyframes fade-right{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+  @keyframes fade-scale{from{opacity:0;transform:scale(0.92);}to{opacity:1;transform:scale(1);}}
+  @keyframes bar-grow{from{transform:scaleY(0);opacity:0;}to{transform:scaleY(1);opacity:1;}}
+  @keyframes spin-slow{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+  .animate-fade-up{animation:fade-up .8s cubic-bezier(.16,1,.3,1) forwards;}
+  .animate-fade-down{animation:fade-down .7s cubic-bezier(.16,1,.3,1) forwards;}
+  .animate-fade-left{animation:fade-left .8s cubic-bezier(.16,1,.3,1) forwards;}
+  .animate-fade-right{animation:fade-right .8s cubic-bezier(.16,1,.3,1) forwards;}
+  .animate-fade-scale{animation:fade-scale .9s cubic-bezier(.16,1,.3,1) forwards;}
+  .animate-bar-grow{animation:bar-grow .6s cubic-bezier(.16,1,.3,1) forwards;opacity:0;}
+  .animate-spin-slow{animation:spin-slow 12s linear infinite;}
+
+  /* scroll reveal (below-the-fold sections only) */
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1);}
+  .reveal.in{opacity:1;transform:translateY(0);}
+
+  ::-webkit-scrollbar{width:10px;}
+  ::-webkit-scrollbar-track{background:#080A19;}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:10px;}
+
+  @media (prefers-reduced-motion: reduce){
+    .animate-fade-up,.animate-fade-down,.animate-fade-left,.animate-fade-right,.animate-fade-scale,.animate-bar-grow,.animate-spin-slow{animation:none !important;opacity:1 !important;transform:none !important;}
+    .reveal{opacity:1 !important;transform:none !important;transition:none !important;}
+  }
+
+  .glass-card{background:var(--card-glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+  .glass-panel{background:var(--card-glass-strong);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);}
+  .nav-pill{background:var(--nav-glass);backdrop-filter:blur(17px);-webkit-backdrop-filter:blur(17px);}
+  .auth-pill{background:var(--auth-glass);backdrop-filter:blur(17px);-webkit-backdrop-filter:blur(17px);}
+
+  /* ---------- live prototype ---------- */
+  .demo-tab-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);}
+  .demo-tab-btn:hover{color:#fff;}
+  .demo-tab-btn.active{background:#E7B65C;border-color:#E7B65C;color:#0A0707;}
+  .demo-toggle-on{background:#E7B65C !important;color:#0A0707 !important;}
+  #demoCategory,#demoSort,#feeResourceSelect{background:transparent;}
+  #demoCategory option,#demoSort option,#feeResourceSelect option{color:#0A0707;}
+
+  .demo-stepper{display:flex;align-items:center;}
+  .demo-step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;min-width:0;}
+  .demo-step .dot{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.15);z-index:2;}
+  .demo-step .lbl{font-size:10px;color:rgba(255,255,255,0.35);margin-top:6px;text-align:center;line-height:1.3;}
+  .demo-step::before{content:'';position:absolute;top:6px;left:-50%;width:100%;height:2px;background:rgba(255,255,255,0.1);z-index:1;}
+  .demo-step:first-child::before{display:none;}
+  .demo-step.done .dot{background:#E7B65C;border-color:#E7B65C;}
+  .demo-step.done::before{background:#E7B65C;}
+  .demo-step.done .lbl{color:rgba(255,255,255,0.6);}
+  .demo-step.current .dot{background:#080A19;border-color:#E7B65C;box-shadow:0 0 0 4px rgba(231,182,92,0.2);}
+  .demo-step.current .lbl{color:#fff;font-weight:600;}
+
+  .demo-modal-backdrop{position:fixed;inset:0;z-index:100;background:rgba(8,10,25,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease;}
+  .demo-modal-backdrop.open{opacity:1;visibility:visible;}
+  .demo-modal{width:min(560px,94vw);max-height:88vh;overflow-y:auto;transform:translateY(20px) scale(.97);transition:transform .35s cubic-bezier(.16,1,.3,1);}
+  .demo-modal-backdrop.open .demo-modal{transform:translateY(0) scale(1);}
+
+  .demo-toast-stack{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:10px;max-width:320px;}
+  .demo-toast{animation:demoToastIn .35s cubic-bezier(.16,1,.3,1),demoToastOut .3s ease 3.2s forwards;}
+  @keyframes demoToastIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+  @keyframes demoToastOut{to{opacity:0;transform:translateX(30px);}}
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<section class="relative w-full min-h-screen overflow-hidden bg-[#080A19]">
+  <video class="absolute inset-0 w-full h-full object-cover opacity-70" autoplay loop muted playsinline
+    src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260813_092641_de52eb87-daf2-41db-92cb-7a56eae012a5.mp4"></video>
+  <div class="absolute inset-0 bg-gradient-to-b from-[#080A19]/30 via-[#080A19]/10 to-[#080A19]"></div>
+
+  <div class="relative z-10 min-h-screen flex flex-col">
+
+    <!-- NAV -->
+    <nav class="w-full max-w-[1800px] mx-auto px-5 sm:px-8 md:px-[82px] pt-[20px] sm:pt-[30px] flex items-center justify-between relative z-50">
+      <div class="opacity-0 animate-fade-down" style="animation-delay:0ms">
+        <div class="flex items-center gap-2.5">
+          <svg width="28" height="28" viewBox="0 0 100 100" fill="none" class="sm:w-[32px] sm:h-[32px] animate-spin-slow" style="animation-duration:18s">
+            <path d="M50 12 A38 38 0 1 1 21 27" stroke="#E7B65C" stroke-width="9" stroke-linecap="round" fill="none"/>
+            <path d="M50 88 A38 38 0 0 1 21 73" stroke="#ffffff" stroke-width="9" stroke-linecap="round" fill="none"/>
+            <path d="M22 14 L21 27 L34 30" stroke="#E7B65C" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M78 86 L79 73 L66 70" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span class="text-white text-[22px] sm:text-[26px] font-[450] leading-none tracking-[-0.02em]">Campus Circular</span>
+        </div>
+      </div>
+
+      <div class="hidden lg:block opacity-0 animate-fade-down" style="animation-delay:100ms">
+        <div class="h-[52px] px-6 flex items-center gap-[30px] nav-pill rounded-[11px]">
+          <a href="#demo" class="text-white/80 text-[14px] font-[450] leading-[14px] hover:text-white transition-colors">Live Demo</a>
+          <a href="#features" class="text-white/80 text-[14px] font-[450] leading-[14px] hover:text-white transition-colors">Features</a>
+          <a href="#lifecycle" class="text-white/80 text-[14px] font-[450] leading-[14px] hover:text-white transition-colors">Lifecycle</a>
+          <a href="#ai-usage" class="text-white/80 text-[14px] font-[450] leading-[14px] hover:text-white transition-colors">AI Usage</a>
+        </div>
+      </div>
+
+      <div class="hidden lg:block opacity-0 animate-fade-down" style="animation-delay:200ms">
+        <div class="h-[52px] p-[3px] auth-pill rounded-[13px] flex items-center gap-[5px]">
+          <a href="#admin" class="h-[46px] flex items-center px-6 rounded-[11px] text-white text-[14px] font-[450] leading-[14px] hover:bg-white/5 transition-colors">Admin</a>
+          <a href="#demo" class="h-[46px] flex items-center px-6 bg-[#E9E9E9] rounded-[11px] text-[#0A0707] text-[14px] font-[450] leading-[14px] hover:bg-white transition-colors">Explore</a>
+        </div>
+      </div>
+
+      <div class="lg:hidden opacity-0 animate-fade-down" style="animation-delay:100ms">
+        <button id="menuBtn" class="w-[44px] h-[44px] flex items-center justify-center rounded-[11px] nav-pill hover:bg-white/10 transition-colors" aria-label="Toggle menu">
+          <div class="relative w-5 h-5">
+            <i data-lucide="menu" id="iconMenu" class="w-5 h-5 text-white absolute inset-0 transition-all duration-300 ease-out"></i>
+            <i data-lucide="x" id="iconX" class="w-5 h-5 text-white absolute inset-0 transition-all duration-300 ease-out opacity-0 -rotate-90 scale-75"></i>
+          </div>
+        </button>
+      </div>
+    </nav>
+
+    <!-- MOBILE MENU OVERLAY -->
+    <div id="mobileMenu" class="lg:hidden fixed inset-0 z-40 invisible transition-all duration-500" style="transition-timing-function:cubic-bezier(.32,.72,0,1)">
+      <div id="mobileBackdrop" class="absolute inset-0 bg-[#080A19]/90 opacity-0 transition-opacity duration-500" style="backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)"></div>
+      <div id="mobilePanel" class="absolute top-[76px] sm:top-[86px] left-4 right-4 sm:left-6 sm:right-6 glass-panel rounded-[20px] border border-white/[0.06] p-6 sm:p-8 opacity-0 -translate-y-4 scale-[0.97] transition-all duration-500 origin-top" style="transition-timing-function:cubic-bezier(.32,.72,0,1)">
+        <div class="flex flex-col gap-1" id="mobileLinks">
+          <a href="#demo" data-i="0" class="mobile-link flex items-center justify-between px-4 py-4 rounded-[12px] text-white/90 text-[18px] font-[450] hover:bg-white/[0.06] transition-all duration-300 opacity-0 -translate-x-3">Live Demo</a>
+          <a href="#features" data-i="1" class="mobile-link flex items-center justify-between px-4 py-4 rounded-[12px] text-white/90 text-[18px] font-[450] hover:bg-white/[0.06] transition-all duration-300 opacity-0 -translate-x-3">Features</a>
+          <a href="#lifecycle" data-i="2" class="mobile-link flex items-center justify-between px-4 py-4 rounded-[12px] text-white/90 text-[18px] font-[450] hover:bg-white/[0.06] transition-all duration-300 opacity-0 -translate-x-3">Lifecycle</a>
+          <a href="#ai-usage" data-i="3" class="mobile-link flex items-center justify-between px-4 py-4 rounded-[12px] text-white/90 text-[18px] font-[450] hover:bg-white/[0.06] transition-all duration-300 opacity-0 -translate-x-3">AI Usage</a>
+        </div>
+        <div class="h-px bg-white/10 my-5"></div>
+        <div id="mobileCtas" class="flex flex-col gap-3 transition-all duration-300 opacity-0 translate-y-2">
+          <a href="#demo" class="w-full h-[50px] flex items-center justify-center bg-[#E9E9E9] rounded-[12px] text-[#0A0707] text-[15px] font-[450] hover:bg-white transition-colors">Explore Resources</a>
+          <a href="#admin" class="w-full h-[50px] flex items-center justify-center rounded-[12px] border border-white/30 text-white text-[15px] font-[450] hover:bg-white/5 transition-colors">Admin</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- HERO CONTENT -->
+    <div class="flex-1 flex items-center py-10 sm:py-8">
+      <div class="w-full max-w-[1800px] mx-auto px-5 sm:px-8 md:px-[82px] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10 lg:gap-12">
+
+        <div class="max-w-[593px]">
+          <div class="opacity-0 animate-fade-up" style="animation-delay:250ms">
+            <p class="text-[#E7B65C] text-[13px] sm:text-[14px] font-[450] tracking-[0.14em] uppercase mb-4">Campus Circular · Concept Prototype</p>
+          </div>
+          <div class="opacity-0 animate-fade-up" style="animation-delay:300ms">
+            <h1 class="text-white text-[36px] sm:text-[52px] md:text-[60px] lg:text-[68px] font-normal leading-[0.98] mb-5 sm:mb-8">From ownership <br class="hidden sm:block"/>to access.</h1>
+          </div>
+          <div class="opacity-0 animate-fade-up" style="animation-delay:500ms">
+            <p class="text-white/80 text-[16px] sm:text-[18px] md:text-[20px] font-[450] leading-[1.35] max-w-[420px] mb-3">Why buy what someone nearby already has?</p>
+            <p class="text-white/60 text-[14px] sm:text-[16px] font-[450] leading-[1.5] max-w-[420px] mb-7 sm:mb-10">A campus platform to discover, share, lend, borrow, donate and request the calculators, cameras, laptops, tools and gear already sitting unused around you.</p>
+          </div>
+          <div class="opacity-0 animate-fade-up" style="animation-delay:700ms">
+            <div class="flex flex-wrap gap-3 sm:gap-4">
+              <a href="#demo" class="h-[46px] sm:h-[51px] px-5 sm:px-[27px] flex items-center bg-[#E9E9E9] rounded-[12px] text-[#0A0707] text-[14px] sm:text-[15.5px] font-[450] leading-[15.5px] transition-opacity hover:opacity-90">Try the live demo</a>
+              <a href="#features" class="h-[46px] sm:h-[51px] px-5 sm:px-[27px] flex items-center rounded-[12px] border border-white text-white text-[14px] sm:text-[15.5px] font-[450] leading-[15.5px] transition-opacity hover:opacity-80">Key functionalities</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- IMPACT CARD -->
+        <div class="opacity-0 animate-fade-scale w-full max-w-[405px] mx-auto lg:mx-0" style="animation-delay:900ms">
+          <div class="w-full rounded-[24px] sm:rounded-[33px] glass-card p-5 sm:p-8 pb-5 sm:pb-6">
+            <p class="text-white text-[16px] sm:text-[20px] font-[450] leading-[20px] mb-3 sm:mb-4">Resources Shared This Term</p>
+            <p class="mb-2 sm:mb-3">
+              <span class="text-white text-[28px] sm:text-[46px] font-[450] leading-[1]">1,842</span>
+              <span class="text-white/20 text-[18px] sm:text-[28px] font-[450] leading-[1]"> items</span>
+            </p>
+            <div class="flex items-center gap-[10px] mb-6 sm:mb-8">
+              <span class="px-[6px] py-[7px] bg-white/20 rounded-[6px] text-white text-[12px] sm:text-[14px] font-[450] leading-[14px]">+58%</span>
+              <span class="text-white/80 text-[12px] sm:text-[14px] font-[450] leading-[14px] opacity-70">vs. previous term (1,166)</span>
+            </div>
+            <div class="relative">
+              <div id="bars" class="flex items-end gap-[1.5px] h-[80px] sm:h-[100px]"></div>
+              <div class="absolute inset-0 pointer-events-none top-0" id="gridlines"></div>
+              <div class="flex justify-between mt-3">
+                <span class="text-[9px] sm:text-[10px] font-[450] leading-[10px] text-white/80">Wk 1</span>
+                <span class="text-[9px] sm:text-[10px] font-[450] leading-[10px] text-white/80">Wk 6</span>
+                <span class="text-[9px] sm:text-[10px] font-[450] leading-[10px] text-white/80">Wk 12</span>
+                <span class="text-[9px] sm:text-[10px] font-[450] leading-[10px] text-white/80" style="opacity:.4">Wk 18</span>
+                <span class="text-[9px] sm:text-[10px] font-[450] leading-[10px] text-white/80" style="opacity:.4">Wk 24</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="pb-6 flex justify-center opacity-0 animate-fade-up" style="animation-delay:1200ms">
+      <i data-lucide="chevron-down" class="text-white/50 w-6 h-6"></i>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LIVE PROTOTYPE ============ -->
+<section id="demo" class="relative bg-[#080A19] py-20 sm:py-28">
+  <div class="w-full max-w-[1800px] mx-auto px-5 sm:px-8 md:px-[82px]">
+    <div class="reveal max-w-[720px] mb-10">
+      <p class="text-[#E7B65C] text-[13px] font-[450] tracking-[0.14em] uppercase mb-4">Live prototype</p>
+      <h2 class="text-white text-[30px] sm:text-[42px] font-normal leading-[1.08] mb-5">Not just a pitch — try it.</h2>
+      <p class="text-white/60 text-[15px] sm:text-[16px] leading-[1.6]">Everything below runs live in your browser against a small mock dataset — search and filter real listings, send a borrowing request and step it through the lifecycle, run the AI matcher, calculate fees, and open the admin panel. No backend, no database — mocked exactly as described in the technical scope below.</p>
+    </div>
+
+    <div class="reveal flex items-center gap-2 overflow-x-auto pb-1 mb-8" id="demoTabs">
+      <button data-demo-tab="discover" class="demo-tab-btn active shrink-0 h-[42px] px-5 rounded-[10px] text-[13px] font-[450] transition-colors">Discover</button>
+      <button data-demo-tab="ai" class="demo-tab-btn shrink-0 h-[42px] px-5 rounded-[10px] text-[13px] font-[450] transition-colors">AI Assistant</button>
+      <button data-demo-tab="requests" class="demo-tab-btn shrink-0 h-[42px] px-5 rounded-[10px] text-[13px] font-[450] transition-colors">My Requests</button>
+      <button data-demo-tab="fees" class="demo-tab-btn shrink-0 h-[42px] px-5 rounded-[10px] text-[13px] font-[450] transition-colors">Fee Calculator</button>
+      <button data-demo-tab="admin" class="demo-tab-btn shrink-0 h-[42px] px-5 rounded-[10px] text-[13px] font-[450] transition-colors">Admin</button>
+    </div>
+
+    <div class="reveal">
+      <!-- DISCOVER -->
+      <div class="demo-panel" id="demoPanel-discover">
+        <div class="flex flex-col sm:flex-row gap-3 mb-6">
+          <div class="flex-1 flex items-center gap-2 glass-card rounded-[12px] px-4 h-[46px]">
+            <i data-lucide="search" class="w-4 h-4 text-white/50"></i>
+            <input id="demoSearch" type="text" placeholder="Search resources, tags, categories…" class="bg-transparent outline-none text-white text-[14px] placeholder-white/40 w-full h-full">
+          </div>
+          <select id="demoCategory" class="glass-card rounded-[12px] px-3 h-[46px] text-[13px] text-white"><option value="" class="text-black">All categories</option></select>
+          <select id="demoSort" class="glass-card rounded-[12px] px-3 h-[46px] text-[13px] text-white">
+            <option value="rating" class="text-black">Top rated</option>
+            <option value="distance" class="text-black">Nearest first</option>
+            <option value="price-asc" class="text-black">Lowest charge</option>
+            <option value="price-desc" class="text-black">Highest charge</option>
+          </select>
+          <button id="demoAvailToggle" class="glass-card rounded-[12px] px-4 h-[46px] text-[13px] text-white/70 font-[450] whitespace-nowrap">Available only</button>
+          <button id="demoListBtn" class="h-[46px] px-4 rounded-[12px] bg-[#E9E9E9] text-[#0A0707] text-[13px] font-[450] whitespace-nowrap">+ List a resource</button>
+        </div>
+        <p class="text-white/40 text-[12px] mb-4" id="demoResultCount"></p>
+        <div id="demoGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+      </div>
+
+      <!-- AI ASSISTANT -->
+      <div class="demo-panel hidden" id="demoPanel-ai">
+        <div class="glass-card rounded-[20px] p-6 sm:p-8">
+          <p class="text-white text-[16px] font-[450] mb-2">Describe what you need — not what to search for.</p>
+          <p class="text-white/50 text-[13px] leading-[1.6] mb-4">The matcher scores every listing's name, category and tags against the words in your message — try it with your own wording.</p>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <textarea id="aiQuery" rows="2" placeholder="e.g. I need to make a reel for my club event tomorrow" class="flex-1 glass-card rounded-[12px] p-3 text-[14px] text-white placeholder-white/40 outline-none resize-none"></textarea>
+            <button id="aiSubmit" class="h-[46px] px-6 rounded-[12px] bg-[#E9E9E9] text-[#0A0707] text-[14px] font-[450] whitespace-nowrap self-start">Find resources</button>
+          </div>
+          <div id="aiExamples" class="flex flex-wrap gap-2 mt-4"></div>
+        </div>
+        <div id="aiResult" class="mt-6"></div>
+      </div>
+
+      <!-- MY REQUESTS -->
+      <div class="demo-panel hidden" id="demoPanel-requests">
+        <div class="glass-card rounded-[16px] px-5 py-4 mb-6 flex flex-wrap items-center gap-x-8 gap-y-2" id="trustSnapshot"></div>
+        <div id="demoRequests"></div>
+      </div>
+
+      <!-- FEE CALCULATOR -->
+      <div class="demo-panel hidden" id="demoPanel-fees">
+        <div class="glass-card rounded-[20px] p-6 sm:p-8 max-w-[560px]">
+          <p class="text-white text-[16px] font-[450] mb-5">Fee calculator</p>
+          <div class="mb-4">
+            <label class="block text-white/50 text-[12px] uppercase tracking-[0.08em] mb-2">Resource</label>
+            <select id="feeResourceSelect" class="w-full glass-card rounded-[10px] px-3 h-[44px] text-[14px] text-white"></select>
+          </div>
+          <div class="mb-5">
+            <label class="block text-white/50 text-[12px] uppercase tracking-[0.08em] mb-2">Number of days</label>
+            <input id="feeDays" type="number" min="1" value="1" class="w-full glass-card rounded-[10px] px-3 h-[44px] text-[14px] text-white bg-transparent outline-none">
+          </div>
+          <div id="feeBreakdown" class="bg-white/5 rounded-[14px] p-5"></div>
+          <p class="text-white/30 text-[11px] mt-3">Platform fee % is set live from Admin → Fee settings — change it there and recalculate here.</p>
+        </div>
+      </div>
+
+      <!-- ADMIN -->
+      <div class="demo-panel hidden" id="demoPanel-admin">
+        <div id="adminArea"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TECHNICAL SCOPE ============ -->
+<section class="relative bg-[#0B0D20] py-16 sm:py-20 border-y border-white/5">
+  <div class="w-full max-w-[1800px] mx-auto px-5 sm:px-8 md:px-[82px]">
+    <div class="reveal flex flex-col lg:flex-row lg:items-start gap-10 lg:gap-16">
+      <div class="lg:w-[320px] shrink-0">
+        <p class="text-[#E7B65C] text-[13px] font-[450] tracking-[0.14em] uppercase mb-4">Technical scope</p>
+        <h3 class="text-white text-[26px] sm:text-[32px] font-normal leading-[1.15]">Frontend-only. Mocked, not connected.</h3>
+      </div>
+      <div class="flex-1 grid sm:grid-cols-3 gap-4">
+        <div class="glass-card rounded-[16px] p-5">
+          <i data-lucide="ban" class="w-5 h-5 text-white/70 mb-3"></i>
+          <p class="text-white text-[15px] font-[450] mb-1">No backend required</p>
+          <p class="text-white/60 text-[13px] leading-[1.5]">No database — this is a frontend-only build.</p>
+        </div>
+        <div class="glass-card rounded-[16px] p-5">
+          <i data-lucide="database" class="w-5 h-5 text-white/70 mb-3"></i>
+          <p class="text-white text-[15px] font-[450] mb-1">Mock data</p>
+          <p class="text-white/60 text-[13px] leading-[1.5]">JSON files, JS objects or localStorage stand in for real records.</p>
+        </div>
+        <div class="glass-card rounded-[16px] p-5">
+          <i data-lucide="flask-conical" class="w-5 h-5 text-white/70 mb-3"></i>
+          <p class="text-white text-[15px] font-[450] mb-1">Simulated everything else</p>
+          <p class="text-white/60 text-[13px] leading-[1.5]">Borrowing, payments, approvals, returns, settlements and disputes are all simulated in the frontend.</p>
+        </div>
+      </div>
+    </div>
+    <p class="reveal text-white/50 text-[14px] leading-[1.6] max-w-[900px] mt-8">The technology, UI/UX, screen count, navigation and implementation approach here were chosen freely, with the focus kept on covering the core problem and required functionality end to end. The objective is a trusted digital campus ecosystem that makes sharing practical, safe and convenient, from discovering a resource to returning it responsibly and settling the exchange.</p>
+  </div>
+</section>
+
+<!-- ============ KEY FUNCTIONALITIES ============ -->
+<section id="features" class="relative bg-[#080A19] py-20 sm:py-28">
+  <div class="w-full max-w-[1800px] mx-auto px-5 sm:px-8 md:px-[82px]">
+    <div class="reveal max-w-[720px] mb-14">
+      <p class="text-[#E7B65C] text-[13px] font-[450] tracking-[0.14em] uppercase mb-4">Key functionalities</p>
+      <h2 class="text-white text-[30px] sm:text-[42px] font-normal leading-[1.08]">Thirteen pieces, one trusted loop.</h2>
+    </div>
+
+    <div id="featureGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  </div>
+</section>
+
+<!-- ============ BORROWING LIFECYCLE ============ -->
+<section id="lifecycle" class="relative bg-[#0B0D20] py-20 sm:py-28 border-y border-white/5">
+  <div class="w-full max-w-[1800px] mx-auto px-5 sm:px-8 md:px-[82px]">
+    <div class="reveal max-w-[720px] mb-14">
+      <p class="text-[#E7B65C] text-[13px] font-[450] tracking-[0.14em] uppercase mb-4">Borrowing lifecycle</p>
+      <h2 class="text-white text-[30px] sm:text-[42px] font-normal leading-[1.08] mb-5">Every exchange, visualised end to end.</h2>
+      <p class="text-white/60 text-[15px] leading-[1.6]">The lifecycle is simulated and displayed visually so both sides always know exactly where a resource stands.</p>
+    </div>
+
+    <div id="lifecycleRow" class="reveal flex flex-col lg:flex-row lg:items-stretch gap-3 lg:gap-0"></div>
+
+    <div class="reveal grid sm:grid-cols-2 gap-5 mt-14">
+      <div class="glass-card rounded-[20px] p-6 sm:p-8">
+        <i data-lucide="alert-triangle" class="w-5 h-5 text-[#E7B65C] mb-3"></i>
+        <p class="text-white text-[17px] font-[450] mb-2">Late return, damage & settlement</p>
+        <p class="text-white/60 text-[14px] leading-[1.6]">Applicable late fees are calculated and reflected in the final settlement. If damage or loss is reported, users can submit evidence, raise a dispute, and track its status through to resolution.</p>
+      </div>
+      <div class="glass-card rounded-[20px] p-6 sm:p-8">
+        <i data-lucide="camera" class="w-5 h-5 text-[#E7B65C] mb-3"></i>
+        <p class="text-white text-[17px] font-[450] mb-2">Before & after condition tracking</p>
+        <p class="text-white/60 text-[14px] leading-[1.6]">The condition of a resource is recorded before borrowing and after return using images, checklists, ratings or other suitable interfaces — so both parties can confirm the exchange fairly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PLATFORM FEE ============ -->
+<section class="relative bg-[#080A19] py-20 sm:py-24">
+  <div class="w-full max-w-[1800px] mx-auto px-5 sm:px-8 md:px-[82px]">
+    <div class="reveal glass-card rounded-[24px] sm:rounded-[33px] p-8 sm:p-12">
+      <p class="text-[#E7B65C] text-[13px] font-[450] tracking-[0.14em] uppercase mb-6">Platform fee</p>
+      <p class="text-white/60 text-[15px] leading-[1.6] max-w-[640px] mb-8">A configurable platform / service fee applies to eligible exchanges, shown plainly on every transaction and in the admin dashboard.</p>
+      <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-white text-[16px] sm:text-[22px] md:text-[26px] font-[450]">
+        <span class="px-4 py-3 rounded-[12px] bg-white/10">Borrowing Charge</span>
+        <span class="text-white/40 text-[20px]">+</span>
+        <span class="px-4 py-3 rounded-[12px] bg-white/10">Platform Fee</span>
+        <span class="text-white/40 text-[20px]">+</span>
+        <span class="px-4 py-3 rounded-[12px] bg-white/10">Security Deposit</span>
+        <span class="text-white/40 text-[20px]">=</span>
+        <span class="px-4 py-3 rounded-[12px] bg-[#E9E9E9] text-[#0A0707]">Transaction Amount</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ADMIN + IMPACT DASHBOARD ============ -->
+<section id="admin" class="relative bg-[#0B0D20] py-20 sm:py-28 border-y border-white/5">
+  <div class="w-full max-w-[1800px] mx-auto px-5 sm:px-8 md:px-[82px] grid lg:grid-cols-2 gap-14">
+
+    <div class="reveal">
+      <p class="text-[#E7B65C] text-[13px] font-[450] tracking-[0.14em] uppercase mb-4">Admin panel</p>
+      <h2 class="text-white text-[28px] sm:text-[36px] font-normal leading-[1.1] mb-6">One dashboard to run the whole exchange.</h2>
+      <p class="text-white/60 text-[15px] leading-[1.6] mb-8">A separate admin login and dashboard for managing the platform.</p>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div class="flex items-center gap-3 glass-card rounded-[12px] px-4 py-3"><i data-lucide="users" class="w-4 h-4 text-white/70"></i><span class="text-white/80 text-[14px]">User & resource management</span></div>
+        <div class="flex items-center gap-3 glass-card rounded-[12px] px-4 py-3"><i data-lucide="check-square" class="w-4 h-4 text-white/70"></i><span class="text-white/80 text-[14px]">Resource approval/rejection</span></div>
+        <div class="flex items-center gap-3 glass-card rounded-[12px] px-4 py-3"><i data-lucide="activity" class="w-4 h-4 text-white/70"></i><span class="text-white/80 text-[14px]">Exchange monitoring</span></div>
+        <div class="flex items-center gap-3 glass-card rounded-[12px] px-4 py-3"><i data-lucide="clock" class="w-4 h-4 text-white/70"></i><span class="text-white/80 text-[14px]">Overdue returns</span></div>
+        <div class="flex items-center gap-3 glass-card rounded-[12px] px-4 py-3"><i data-lucide="flag" class="w-4 h-4 text-white/70"></i><span class="text-white/80 text-[14px]">Damage / disputes</span></div>
+        <div class="flex items-center gap-3 glass-card rounded-[12px] px-4 py-3"><i data-lucide="user-x" class="w-4 h-4 text-white/70"></i><span class="text-white/80 text-[14px]">Flagging or suspension</span></div>
+        <div class="flex items-center gap-3 glass-card rounded-[12px] px-4 py-3"><i data-lucide="bar-chart-2" class="w-4 h-4 text-white/70"></i><span class="text-white/80 text-[14px]">Platform statistics</span></div>
+        <div class="flex items-center gap-3 glass-card rounded-[12px] px-4 py-3"><i data-lucide="receipt" class="w-4 h-4 text-white/70"></i><span class="text-white/80 text-[14px]">Fee & transaction monitoring</span></div>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <p class="text-[#E7B65C] text-[13px] font-[450] tracking-[0.14em] uppercase mb-4">Campus impact dashboard</p>
+      <h2 class="text-white text-[28px] sm:text-[36px] font-normal leading-[1.1] mb-6">Community insight, at a glance.</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="glass-card rounded-[16px] p-5">
+          <p class="text-white text-[26px] font-[450] leading-[1]">2,310</p>
+          <p class="text-white/60 text-[13px] mt-1">Active members</p>
+        </div>
+        <div class="glass-card rounded-[16px] p-5">
+          <p class="text-white text-[26px] font-[450] leading-[1]">91%</p>
+          <p class="text-white/60 text-[13px] mt-1">On-time returns</p>
+        </div>
+        <div class="glass-card rounded-[16px] p-5">
+          <p class="text-white text-[26px] font-[450] leading-[1]">₹4.6L</p>
+          <p class="text-white/60 text-[13px] mt-1">Money saved</p>
+        </div>
+        <div class="glass-card rounded-[16px] p-5">
+          <p class="text-white text-[26px] font-[450] leading-[1]">3,050</p>
+          <p class="text-white/60 text-[13px] mt-1">Resources reused</p>
+        </div>
+      </div>
+      <p class="text-white/50 text-[13px] leading-[1.6] mt-5">Popular categories, successful exchanges and reuse trends surface here too — helping the community see the impact of sharing over buying.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ AI USAGE ============ -->
+<section id="ai-usage" class="relative bg-[#080A19] py-20 sm:py-28">
+  <div class="w-full max-w-[1800px] mx-auto px-5 sm:px-8 md:px-[82px]">
+    <div class="reveal max-w-[720px] mb-12">
+      <p class="text-[#E7B65C] text-[13px] font-[450] tracking-[0.14em] uppercase mb-4">AI usage</p>
+      <h2 class="text-white text-[30px] sm:text-[42px] font-normal leading-[1.08] mb-5">AI is allowed — and encouraged.</h2>
+      <p class="text-white/60 text-[15px] leading-[1.6]">Used meaningfully, not decoratively, across the experience:</p>
+    </div>
+    <div class="reveal flex flex-wrap gap-3">
+      <span class="px-4 py-3 rounded-[12px] border border-[#E7B65C]/40 text-white text-[14px] font-[450] flex items-center gap-2"><i data-lucide="type" class="w-4 h-4 text-[#E7B65C]"></i>Natural-language requirement understanding</span>
+      <span class="px-4 py-3 rounded-[12px] border border-[#E7B65C]/40 text-white text-[14px] font-[450] flex items-center gap-2"><i data-lucide="thumbs-up" class="w-4 h-4 text-[#E7B65C]"></i>Resource recommendations</span>
+      <span class="px-4 py-3 rounded-[12px] border border-[#E7B65C]/40 text-white text-[14px] font-[450] flex items-center gap-2"><i data-lucide="git-compare" class="w-4 h-4 text-[#E7B65C]"></i>Smart matching</span>
+      <span class="px-4 py-3 rounded-[12px] border border-[#E7B65C]/40 text-white text-[14px] font-[450] flex items-center gap-2"><i data-lucide="shuffle" class="w-4 h-4 text-[#E7B65C]"></i>Alternative suggestions</span>
+      <span class="px-4 py-3 rounded-[12px] border border-[#E7B65C]/40 text-white text-[14px] font-[450] flex items-center gap-2"><i data-lucide="scan-search" class="w-4 h-4 text-[#E7B65C]"></i>Condition comparison</span>
+      <span class="px-4 py-3 rounded-[12px] border border-[#E7B65C]/40 text-white text-[14px] font-[450] flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-[#E7B65C]"></i>Trust analysis</span>
+      <span class="px-4 py-3 rounded-[12px] border border-[#E7B65C]/40 text-white text-[14px] font-[450] flex items-center gap-2"><i data-lucide="user-cog" class="w-4 h-4 text-[#E7B65C]"></i>Personalized recommendations</span>
+      <span class="px-4 py-3 rounded-[12px] border border-[#E7B65C]/40 text-white text-[14px] font-[450] flex items-center gap-2"><i data-lucide="file-plus" class="w-4 h-4 text-[#E7B65C]"></i>Generating borrowing requests</span>
+      <span class="px-4 py-3 rounded-[12px] border border-white/20 text-white/70 text-[14px] font-[450] flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i>Other innovative features</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="relative bg-[#0B0D20] border-t border-white/5 py-12">
+  <div class="w-full max-w-[1800px] mx-auto px-5 sm:px-8 md:px-[82px] flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+    <div>
+      <div class="flex items-center gap-2.5 mb-3">
+        <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
+          <path d="M50 12 A38 38 0 1 1 21 27" stroke="#E7B65C" stroke-width="9" stroke-linecap="round" fill="none"/>
+          <path d="M50 88 A38 38 0 0 1 21 73" stroke="#ffffff" stroke-width="9" stroke-linecap="round" fill="none"/>
+          <path d="M22 14 L21 27 L34 30" stroke="#E7B65C" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M78 86 L79 73 L66 70" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        <span class="text-white text-[18px] font-[450]">Campus Circular</span>
+      </div>
+      <p class="text-white/40 text-[13px] leading-[1.6] max-w-[420px]">A concept prototype for a trusted, campus-wide resource-sharing platform — frontend-only, with all data and flows simulated.</p>
+    </div>
+    <p class="text-white/30 text-[13px]">Why buy what someone nearby already has?</p>
+  </div>
+</footer>
+
+<!-- ============ DEMO MODALS + TOASTS ============ -->
+<div id="borrowModalBackdrop" class="demo-modal-backdrop">
+  <div class="demo-modal glass-panel rounded-[20px] border border-white/[0.06] p-6 sm:p-8">
+    <div class="flex items-start justify-between mb-5">
+      <p class="text-white text-[18px] font-[450]">Borrowing agreement</p>
+      <button id="borrowModalClose" class="w-8 h-8 rounded-full glass-card flex items-center justify-center text-white/60"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div id="borrowModalBody"></div>
+  </div>
+</div>
+
+<div id="listModalBackdrop" class="demo-modal-backdrop">
+  <div class="demo-modal glass-panel rounded-[20px] border border-white/[0.06] p-6 sm:p-8">
+    <div class="flex items-start justify-between mb-5">
+      <p class="text-white text-[18px] font-[450]">List a resource</p>
+      <button id="listModalClose" class="w-8 h-8 rounded-full glass-card flex items-center justify-center text-white/60"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="field mb-3"><label class="block text-white/50 text-[12px] uppercase tracking-[0.08em] mb-2">Item name</label><input id="listName" type="text" placeholder="e.g. Bluetooth Speaker" class="w-full glass-card rounded-[10px] px-3 h-[44px] text-[14px] text-white bg-transparent outline-none"></div>
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div><label class="block text-white/50 text-[12px] uppercase tracking-[0.08em] mb-2">Category</label><input id="listCategory" type="text" placeholder="e.g. Audio" class="w-full glass-card rounded-[10px] px-3 h-[44px] text-[14px] text-white bg-transparent outline-none"></div>
+      <div><label class="block text-white/50 text-[12px] uppercase tracking-[0.08em] mb-2">Charge / day (₹)</label><input id="listCharge" type="number" min="0" value="50" class="w-full glass-card rounded-[10px] px-3 h-[44px] text-[14px] text-white bg-transparent outline-none"></div>
+    </div>
+    <div class="mb-3"><label class="block text-white/50 text-[12px] uppercase tracking-[0.08em] mb-2">Security deposit (₹)</label><input id="listDeposit" type="number" min="0" value="500" class="w-full glass-card rounded-[10px] px-3 h-[44px] text-[14px] text-white bg-transparent outline-none"></div>
+    <div class="mb-5"><label class="block text-white/50 text-[12px] uppercase tracking-[0.08em] mb-2">Description</label><textarea id="listDesc" rows="2" placeholder="Condition, accessories included, pickup notes…" class="w-full glass-card rounded-[10px] p-3 text-[14px] text-white bg-transparent outline-none resize-none"></textarea></div>
+    <button id="listSubmitBtn" class="w-full h-[46px] rounded-[12px] bg-[#E9E9E9] text-[#0A0707] text-[14px] font-[450]">Submit for approval</button>
+    <p class="text-white/30 text-[11px] mt-3">Goes to Admin → Approvals before it appears in Discover — this is the moderation step in action.</p>
+  </div>
+</div>
+
+<div class="demo-toast-stack" id="demoToastStack"></div>
+
+<script>
+  lucide.createIcons();
+
+  /* ---------- mobile menu ---------- */
+  const menuBtn = document.getElementById('menuBtn');
+  const iconMenu = document.getElementById('iconMenu');
+  const iconX = document.getElementById('iconX');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const mobileBackdrop = document.getElementById('mobileBackdrop');
+  const mobilePanel = document.getElementById('mobilePanel');
+  const mobileLinks = document.querySelectorAll('.mobile-link');
+  const mobileCtas = document.getElementById('mobileCtas');
+  let isOpen = false;
+
+  function setMenu(open){
+    isOpen = open;
+    mobileMenu.classList.toggle('invisible', !open);
+    mobileMenu.classList.toggle('visible', open);
+    mobileBackdrop.classList.toggle('opacity-100', open);
+    mobileBackdrop.classList.toggle('opacity-0', !open);
+    mobilePanel.classList.toggle('opacity-100', open);
+    mobilePanel.classList.toggle('opacity-0', !open);
+    mobilePanel.classList.toggle('translate-y-0', open);
+    mobilePanel.classList.toggle('-translate-y-4', !open);
+    mobilePanel.classList.toggle('scale-100', open);
+    mobilePanel.classList.toggle('scale-[0.97]', !open);
+
+    iconMenu.style.opacity = open ? '0' : '1';
+    iconMenu.style.transform = open ? 'rotate(90deg) scale(.75)' : 'rotate(0deg) scale(1)';
+    iconX.style.opacity = open ? '1' : '0';
+    iconX.style.transform = open ? 'rotate(0deg) scale(1)' : 'rotate(-90deg) scale(.75)';
+
+    mobileLinks.forEach((el,i)=>{
+      el.style.transitionDelay = open ? (100 + i*50) + 'ms' : '0ms';
+      el.classList.toggle('opacity-100', open);
+      el.classList.toggle('translate-x-0', open);
+      el.classList.toggle('opacity-0', !open);
+      el.classList.toggle('-translate-x-3', !open);
+    });
+    mobileCtas.style.transitionDelay = open ? '350ms' : '0ms';
+    mobileCtas.classList.toggle('opacity-100', open);
+    mobileCtas.classList.toggle('translate-y-0', open);
+    mobileCtas.classList.toggle('opacity-0', !open);
+    mobileCtas.classList.toggle('translate-y-2', !open);
+
+    document.body.style.overflow = open ? 'hidden' : '';
+  }
+
+  menuBtn.addEventListener('click', ()=> setMenu(!isOpen));
+  mobileBackdrop.addEventListener('click', ()=> setMenu(false));
+  mobileLinks.forEach(el => el.addEventListener('click', ()=> setMenu(false)));
+  mobileCtas.querySelectorAll('a').forEach(el => el.addEventListener('click', ()=> setMenu(false)));
+
+  /* ---------- hero bar chart ---------- */
+  const BAR_HEIGHTS = [18,22,19,27,24,31,29,38,34,42,40,47,45,53,49,58,55,63,60,68,64,70,67,74,60,52,45,38];
+  const maxHeight = Math.max(...BAR_HEIGHTS);
+  const barsEl = document.getElementById('bars');
+  BAR_HEIGHTS.forEach((h,i)=>{
+    const isProjected = i >= BAR_HEIGHTS.length - 4;
+    const bar = document.createElement('div');
+    bar.className = 'flex-1 rounded-[0.5px] animate-bar-grow';
+    bar.style.transformOrigin = 'bottom';
+    bar.style.height = (h/maxHeight*100) + '%';
+    bar.style.backgroundColor = isProjected ? 'rgba(255,255,255,0.1)' : 'white';
+    bar.style.animationDelay = (1100 + i*30) + 'ms';
+    barsEl.appendChild(bar);
+  });
+  const gridEl = document.getElementById('gridlines');
+  [0,1,2,3,4].forEach(i=>{
+    const line = document.createElement('div');
+    line.className = 'absolute top-0 bottom-0 w-px bg-white/10';
+    line.style.left = ((i+1)/5*100) + '%';
+    gridEl.appendChild(line);
+  });
+
+  /* ---------- key functionalities data ---------- */
+  const FEATURES = [
+    { n:'01', icon:'shield-check', title:'User & Trust Profile', body:'Campus-member profiles showing department/year, verification status, trust score, ratings, successful exchanges, late returns and disputes.' },
+    { n:'02', icon:'layout-grid', title:'Resource Listing & Item Preview', body:'View and list resources with images, description, category, condition, availability, location, owner, included accessories, borrowing conditions, charges, deposit and previous usage history.' },
+    { n:'03', icon:'search', title:'Resource Discovery', body:'Search, filter, sort and discover resources based on category, availability, distance, condition, rating and other relevant criteria.' },
+    { n:'04', icon:'sparkles', title:'Need-Based / AI-Assisted Discovery', body:'Describe a requirement in natural language rather than searching by item name — the system identifies and recommends suitable resources.' },
+    { n:'05', icon:'git-compare', title:'Smart Matching & Alternatives', body:'Rank or compare available resources by suitability, distance, availability, charges and trust. If a resource is unavailable, suggest alternatives or let the user post a community request.' },
+    { n:'06', icon:'wallet', title:'Borrowing Charges & Security Deposit', body:'Support different borrowing models — free or paid — with security deposits, rental charges, late fees and damage deductions clearly distinguished.' },
+    { n:'07', icon:'file-signature', title:'Borrowing Agreement', body:'Before confirming a request, display a summary of the resource, owner, borrower, duration, charges and deposit for both sides to confirm.' },
+    { n:'08', icon:'camera', title:'Before & After Condition Tracking', body:'Record the condition of a resource before borrowing and after return using images, checklists, ratings or other suitable interfaces.' },
+    { n:'09', icon:'repeat', title:'Borrowing Lifecycle', body:'Simulate and visually display the full borrowing journey — Available → Requested → Accepted → Handover → Borrowed → Return Due → Returned.' },
+    { n:'10', icon:'alert-triangle', title:'Late Return, Damage & Settlement', body:'Calculate applicable late fees and reflect them in the final settlement. Support evidence submission and dispute tracking for damage or loss.' },
+    { n:'11', icon:'shield', title:'Admin Panel', body:'A separate admin login and dashboard for user/resource management, approvals, exchange monitoring, overdue returns, disputes and platform statistics.' },
+    { n:'12', icon:'percent', title:'Platform Fee', body:'A configurable platform fee applies to eligible exchanges: Borrowing Charge + Platform Fee + Security Deposit = Transaction Amount.' },
+    { n:'13', icon:'bar-chart-3', title:'Campus Impact Dashboard', body:'Community insights — active members, resources shared, popular categories, on-time returns, successful exchanges, money saved and resources reused.' },
+  ];
+  const grid = document.getElementById('featureGrid');
+  FEATURES.forEach(f=>{
+    const card = document.createElement('div');
+    card.className = 'glass-card rounded-[20px] p-6';
+    card.innerHTML = `
+      <div class="flex items-start justify-between mb-4">
+        <i data-lucide="${f.icon}" class="w-5 h-5 text-[#E7B65C]"></i>
+        <span class="text-white/25 text-[13px] font-[450]">${f.n}</span>
+      </div>
+      <p class="text-white text-[16px] font-[450] mb-2 leading-[1.3]">${f.title}</p>
+      <p class="text-white/55 text-[13.5px] leading-[1.55]">${f.body}</p>
+    `;
+    grid.appendChild(card);
+  });
+
+  /* ---------- lifecycle row ---------- */
+  const STEPS = [
+    {icon:'circle-dot', label:'Available'},
+    {icon:'inbox', label:'Requested'},
+    {icon:'check-circle-2', label:'Accepted'},
+    {icon:'hand', label:'Handover'},
+    {icon:'package', label:'Borrowed'},
+    {icon:'clock', label:'Return Due'},
+    {icon:'rotate-ccw', label:'Returned'},
+  ];
+  const lifecycleRow = document.getElementById('lifecycleRow');
+  STEPS.forEach((s,i)=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'flex-1 flex lg:flex-col items-center gap-4 lg:gap-3 glass-card lg:bg-transparent rounded-[16px] lg:rounded-none p-4 lg:p-0 lg:border-r lg:border-white/10 lg:last:border-r-0';
+    wrap.innerHTML = `
+      <div class="w-11 h-11 shrink-0 rounded-full flex items-center justify-center border border-[#E7B65C]/50 bg-[#E7B65C]/10">
+        <i data-lucide="${s.icon}" class="w-5 h-5 text-[#E7B65C]"></i>
+      </div>
+      <div class="lg:text-center">
+        <p class="text-white/30 text-[11px] font-[450]">Step ${i+1}</p>
+        <p class="text-white text-[14px] font-[450]">${s.label}</p>
+      </div>
+    `;
+    lifecycleRow.appendChild(wrap);
+  });
+
+  lucide.createIcons();
+
+  /* ============================================================
+     LIVE PROTOTYPE — mock data + working interactions
+  ============================================================ */
+  (function(){
+    const byId = (arr,id)=> arr.find(x=>x.id===id);
+    const rupee = n => '₹'+Math.round(n).toLocaleString('en-IN');
+
+    const OWNERS = [
+      { id:'u1', name:'Priya S.', dept:'CS', year:'2nd yr', trust:4.9, suspended:false },
+      { id:'u2', name:'Rohan D.', dept:'ECE', year:'3rd yr', trust:4.6, suspended:false },
+      { id:'u3', name:'Meera K.', dept:'Mech', year:'1st yr', trust:4.7, suspended:false },
+      { id:'u4', name:'Aditya V.', dept:'IT', year:'3rd yr', trust:4.5, suspended:false },
+      { id:'u5', name:'Kabir M.', dept:'Civil', year:'2nd yr', trust:4.4, suspended:false },
+      { id:'u6', name:'Sana A.', dept:'CS', year:'4th yr', trust:4.8, suspended:false },
+    ];
+
+    const RESOURCES = [
+      { id:'r1', name:'Canon 200D DSLR Kit', cat:'Camera', icon:'camera', owner:'Priya S.', condition:'Excellent', available:true, location:'Hostel Block C', distance:0.4, charge:150, deposit:2000, rating:4.8, tags:['camera','dslr','photography','video','reel'], desc:'DSLR with 18-55mm kit lens, spare battery and a 32GB card.' },
+      { id:'r2', name:'Compact Tripod Stand', cat:'Camera', icon:'aperture', owner:'Priya S.', condition:'Good', available:true, location:'Hostel Block C', distance:0.4, charge:30, deposit:300, rating:4.5, tags:['tripod','camera','stabilizer','video'], desc:'Lightweight aluminium tripod, extends to 1.5m.' },
+      { id:'r3', name:'Collar Mic Set', cat:'Audio', icon:'mic', owner:'Rohan D.', condition:'Good', available:true, location:'Library Annex', distance:1.1, charge:40, deposit:400, rating:4.3, tags:['microphone','mic','audio','recording','reel'], desc:'Wireless collar mic pair, 6hr battery, works with phones.' },
+      { id:'r4', name:'LED Ring Light', cat:'Lighting', icon:'lightbulb', owner:'Rohan D.', condition:'Excellent', available:false, location:'Library Annex', distance:1.1, charge:35, deposit:350, rating:4.4, tags:['lighting','light','video','reel','photography'], desc:'10-inch ring light with adjustable stand and phone clamp.' },
+      { id:'r5', name:"Casio fx-991ES Calculator", cat:'Study', icon:'calculator', owner:'Meera K.', condition:'Good', available:true, location:'Academic Block A', distance:0.2, charge:10, deposit:200, rating:4.9, tags:['calculator','maths','exam','scientific'], desc:'Scientific calculator, ideal for exams and assignments.' },
+      { id:'r6', name:'Dell Inspiron Laptop', cat:'Electronics', icon:'laptop', owner:'Aditya V.', condition:'Good', available:true, location:'Hostel Block A', distance:0.6, charge:120, deposit:3000, rating:4.2, tags:['laptop','computer','coding','assignment','electronics'], desc:'i5, 8GB RAM, charger included — good for short-term coding work.' },
+      { id:'r7', name:'4-Person Camping Tent', cat:'Outdoor', icon:'tent', owner:'Kabir M.', condition:'Fair', available:true, location:'Sports Complex', distance:1.8, charge:80, deposit:1500, rating:4.0, tags:['tent','camping','trip','outdoor','trek'], desc:'Waterproof 4-person tent, poles and pegs included.' },
+      { id:'r8', name:'Acoustic Guitar', cat:'Music', icon:'music', owner:'Sana A.', condition:'Excellent', available:true, location:'Hostel Block B', distance:0.5, charge:60, deposit:1200, rating:4.7, tags:['guitar','music','instrument','acoustic'], desc:'Steel-string acoustic, comes with a soft case and picks.' },
+      { id:'r9', name:'Badminton Racket Set (2)', cat:'Sports', icon:'dumbbell', owner:'Kabir M.', condition:'Good', available:true, location:'Sports Complex', distance:1.8, charge:20, deposit:250, rating:4.1, tags:['badminton','sports','racket','shuttlecock'], desc:'Two rackets and a tube of shuttlecocks.' },
+      { id:'r10', name:'Cordless Drill Kit', cat:'Tools', icon:'wrench', owner:'Aditya V.', condition:'Good', available:true, location:'Hostel Block A', distance:0.6, charge:50, deposit:800, rating:4.3, tags:['drill','tools','diy','repair','hardware','fix'], desc:'Cordless drill with bit set, charger included.' },
+      { id:'r11', name:'Portable Projector', cat:'Event', icon:'monitor', owner:'Meera K.', condition:'Good', available:true, location:'Academic Block A', distance:0.2, charge:100, deposit:2500, rating:4.5, tags:['projector','event','presentation','club','screening'], desc:'Mini LED projector with HDMI cable, good for club screenings.' },
+      { id:'r12', name:'Extension Board (6 socket)', cat:'Event', icon:'zap', owner:'Sana A.', condition:'Excellent', available:true, location:'Hostel Block B', distance:0.5, charge:15, deposit:150, rating:4.6, tags:['extension','power','event','socket'], desc:'6-socket surge-protected extension board, 3m cable.' },
+    ];
+
+    const PENDING_APPROVALS = [
+      { id:'p1', name:'JBL Bluetooth Speaker', cat:'Audio', icon:'volume-2', submittedBy:'Ishaan T.', charge:45, deposit:600, desc:'Portable speaker, 10hr battery.' },
+    ];
+    const DISPUTES = [];
+    const REQUESTS = [];
+    const adminSettings = { loggedIn:false, platformFeePercent:8, lateFeePerDay:20 };
+    const STAGE_LABELS = ['Requested','Accepted','Handover','Borrowed','Return Due','Returned'];
+    const feeFor = charge => Math.round(charge*adminSettings.platformFeePercent/100);
+
+    function toast(msg, kind){
+      const el = document.createElement('div');
+      el.className = 'demo-toast glass-panel rounded-[10px] px-4 py-3 text-[13px] text-white border-l-4 '+(kind==='warn' ? 'border-red-400' : 'border-[#E7B65C]');
+      el.textContent = (kind==='warn' ? '⚠ ' : '✓ ') + msg;
+      document.getElementById('demoToastStack').appendChild(el);
+      setTimeout(()=> el.remove(), 3600);
+    }
+
+    /* ---------- tab switching ---------- */
+    const demoPanels = { discover:'demoPanel-discover', ai:'demoPanel-ai', requests:'demoPanel-requests', fees:'demoPanel-fees', admin:'demoPanel-admin' };
+    document.querySelectorAll('[data-demo-tab]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('[data-demo-tab]').forEach(b=> b.classList.remove('active'));
+        btn.classList.add('active');
+        Object.keys(demoPanels).forEach(k=> document.getElementById(demoPanels[k]).classList.toggle('hidden', k!==btn.dataset.demoTab));
+        if(btn.dataset.demoTab==='requests') renderRequests();
+        if(btn.dataset.demoTab==='fees'){ populateFeeResourceSelect(); renderFeeBreakdown(); }
+        if(btn.dataset.demoTab==='admin') renderAdmin();
+        lucide.createIcons();
+      });
+    });
+
+    /* ---------- discover ---------- */
+    const demoState = { search:'', category:'', sort:'rating', availOnly:false };
+
+    function populateCategoryFilter(){
+      const sel = document.getElementById('demoCategory');
+      const cats = [...new Set(RESOURCES.map(r=>r.cat))].sort();
+      sel.innerHTML = '<option value="" class="text-black">All categories</option>' + cats.map(c=>`<option value="${c}" class="text-black">${c}</option>`).join('');
+    }
+    function getFilteredResources(){
+      const q = demoState.search.trim().toLowerCase();
+      let list = RESOURCES.filter(r=>{
+        const hay = (r.name+' '+r.cat+' '+r.tags.join(' ')).toLowerCase();
+        return (!q || hay.includes(q)) && (!demoState.category || r.cat===demoState.category) && (!demoState.availOnly || r.available);
+      });
+      if(demoState.sort==='distance') list.sort((a,b)=> a.distance-b.distance);
+      else if(demoState.sort==='price-asc') list.sort((a,b)=> a.charge-b.charge);
+      else if(demoState.sort==='price-desc') list.sort((a,b)=> b.charge-a.charge);
+      else list.sort((a,b)=> b.rating-a.rating);
+      return list;
+    }
+    function resourceCardHTML(r){
+      return `<div class="glass-card rounded-[20px] p-5">
+        <div class="w-full h-[90px] rounded-[14px] bg-white/5 flex items-center justify-center mb-3"><i data-lucide="${r.icon}" class="w-7 h-7 text-[#E7B65C]"></i></div>
+        <div class="flex items-start justify-between gap-2 mb-1">
+          <span class="text-[10px] uppercase tracking-[0.08em] text-[#E7B65C] bg-white/5 px-2 py-1 rounded-[6px]">${r.cat}</span>
+          <span class="text-[11px] font-[450] px-2 py-1 rounded-full ${r.available?'bg-[#E7B65C]/15 text-[#E7B65C]':'bg-white/10 text-white/40'}">${r.available?'Available':'Unavailable'}</span>
+        </div>
+        <p class="text-white text-[15px] font-[450] mt-2 mb-1">${r.name}</p>
+        <p class="text-white/40 text-[12px] mb-3">${r.owner} · ${r.location} · ${r.distance}km · ★${r.rating}</p>
+        <div class="flex items-center justify-between mb-3">
+          <div><span class="text-white text-[15px] font-[450]">₹${r.charge}</span><span class="text-white/40 text-[11px]">/day</span></div>
+          <div class="text-white/40 text-[11px]">Deposit ₹${r.deposit}</div>
+        </div>
+        <button ${r.available?'':'disabled'} data-request-id="${r.id}" class="w-full h-[38px] rounded-[10px] text-[13px] font-[450] ${r.available?'bg-[#E9E9E9] text-[#0A0707]':'bg-white/5 text-white/30 cursor-not-allowed'}">${r.available?'Request to borrow':'Currently unavailable'}</button>
+      </div>`;
+    }
+    function renderDiscover(){
+      const list = getFilteredResources();
+      document.getElementById('demoResultCount').textContent = list.length+' of '+RESOURCES.length+' resources shown';
+      document.getElementById('demoGrid').innerHTML = list.length ? list.map(resourceCardHTML).join('') : '<p class="text-white/40 text-[13px] col-span-full">No resources match those filters.</p>';
+      lucide.createIcons();
+    }
+    document.getElementById('demoSearch').addEventListener('input', e=>{ demoState.search=e.target.value; renderDiscover(); });
+    document.getElementById('demoCategory').addEventListener('change', e=>{ demoState.category=e.target.value; renderDiscover(); });
+    document.getElementById('demoSort').addEventListener('change', e=>{ demoState.sort=e.target.value; renderDiscover(); });
+    document.getElementById('demoAvailToggle').addEventListener('click', function(){ demoState.availOnly=!demoState.availOnly; this.classList.toggle('demo-toggle-on', demoState.availOnly); renderDiscover(); });
+    document.getElementById('demoGrid').addEventListener('click', e=>{ const btn=e.target.closest('[data-request-id]'); if(btn && !btn.disabled) openBorrowModal(btn.dataset.requestId); });
+    document.getElementById('demoListBtn').addEventListener('click', ()=> document.getElementById('listModalBackdrop').classList.add('open'));
+
+    /* ---------- borrow modal ---------- */
+    let currentBorrowResourceId = null;
+    function openBorrowModal(resourceId){
+      currentBorrowResourceId = resourceId;
+      const r = byId(RESOURCES, resourceId);
+      document.getElementById('borrowModalBody').innerHTML = `
+        <div class="glass-card rounded-[14px] p-4 mb-4"><p class="text-white text-[14px] font-[450]">${r.name}</p><p class="text-white/40 text-[12px] mt-1">Owner: ${r.owner} · ${r.location} · Condition: ${r.condition}</p></div>
+        <label class="block text-white/50 text-[12px] uppercase tracking-[0.08em] mb-2">Number of days</label>
+        <input id="borrowDays" type="number" min="1" value="1" class="w-full glass-card rounded-[10px] px-3 h-[44px] text-[14px] text-white bg-transparent outline-none">
+        <div id="borrowBreakdown" class="bg-white/5 rounded-[14px] p-5 mt-4"></div>
+        <button id="borrowConfirmBtn" class="w-full h-[46px] rounded-[12px] bg-[#E9E9E9] text-[#0A0707] text-[14px] font-[450] mt-5">Confirm request</button>`;
+      document.getElementById('borrowDays').addEventListener('input', updateBorrowBreakdown);
+      document.getElementById('borrowConfirmBtn').addEventListener('click', confirmBorrow);
+      updateBorrowBreakdown();
+      document.getElementById('borrowModalBackdrop').classList.add('open');
+    }
+    function updateBorrowBreakdown(){
+      const r = byId(RESOURCES, currentBorrowResourceId);
+      const days = Math.max(1, parseInt(document.getElementById('borrowDays').value||'1',10));
+      const charge = r.charge*days, fee = feeFor(charge), total = charge+fee+r.deposit;
+      document.getElementById('borrowBreakdown').innerHTML = `
+        <div class="flex justify-between text-white/60 text-[13px] py-1"><span>Borrowing charge (${days} × ₹${r.charge})</span><span>${rupee(charge)}</span></div>
+        <div class="flex justify-between text-white/60 text-[13px] py-1"><span>Platform fee (${adminSettings.platformFeePercent}%)</span><span>${rupee(fee)}</span></div>
+        <div class="flex justify-between text-white/60 text-[13px] py-1"><span>Security deposit</span><span>${rupee(r.deposit)}</span></div>
+        <div class="flex justify-between text-white text-[14px] font-[450] pt-2 mt-2 border-t border-white/10"><span>Total payable now</span><span>${rupee(total)}</span></div>`;
+    }
+    function confirmBorrow(){
+      const r = byId(RESOURCES, currentBorrowResourceId);
+      const days = Math.max(1, parseInt(document.getElementById('borrowDays').value||'1',10));
+      REQUESTS.push({ id:'q'+Date.now(), resourceId:r.id, borrower:'You', days, stage:1, lateDays:0, disputed:false });
+      r.available = false;
+      document.getElementById('borrowModalBackdrop').classList.remove('open');
+      toast('Request sent to '+r.owner+'. Track it under My Requests.');
+      renderDiscover();
+      document.querySelector('[data-demo-tab="requests"]').click();
+    }
+    document.getElementById('borrowModalClose').addEventListener('click', ()=> document.getElementById('borrowModalBackdrop').classList.remove('open'));
+    document.getElementById('borrowModalBackdrop').addEventListener('click', e=>{ if(e.target.id==='borrowModalBackdrop') e.currentTarget.classList.remove('open'); });
+
+    /* ---------- list-a-resource modal ---------- */
+    document.getElementById('listModalClose').addEventListener('click', ()=> document.getElementById('listModalBackdrop').classList.remove('open'));
+    document.getElementById('listModalBackdrop').addEventListener('click', e=>{ if(e.target.id==='listModalBackdrop') e.currentTarget.classList.remove('open'); });
+    document.getElementById('listSubmitBtn').addEventListener('click', ()=>{
+      const name = document.getElementById('listName').value.trim();
+      if(!name){ toast('Give the item a name first.', 'warn'); return; }
+      const cat = document.getElementById('listCategory').value.trim() || 'General';
+      const charge = Math.max(0, parseInt(document.getElementById('listCharge').value||'0',10));
+      const deposit = Math.max(0, parseInt(document.getElementById('listDeposit').value||'0',10));
+      const desc = document.getElementById('listDesc').value.trim();
+      PENDING_APPROVALS.push({ id:'p'+Date.now(), name, cat, icon:'package', submittedBy:'You', charge, deposit, desc });
+      document.getElementById('listModalBackdrop').classList.remove('open');
+      document.getElementById('listName').value=''; document.getElementById('listCategory').value=''; document.getElementById('listDesc').value='';
+      toast('Submitted — pending admin approval.');
+    });
+
+    /* ---------- my requests ---------- */
+    function trustSnapshotHTML(){
+      const successful = REQUESTS.filter(q=>q.stage===6 && !q.disputed).length;
+      const active = REQUESTS.filter(q=>q.stage<6).length;
+      const disputes = REQUESTS.filter(q=>q.disputed).length;
+      const trust = Math.max(1, Math.min(5, 4.6 + successful*0.05 - disputes*0.3)).toFixed(1);
+      return `<div><p class="text-white text-[18px] font-[450]">★ ${trust}</p><p class="text-white/40 text-[11px] uppercase tracking-[0.06em]">Trust score</p></div>
+        <div><p class="text-white text-[18px] font-[450]">${successful}</p><p class="text-white/40 text-[11px] uppercase tracking-[0.06em]">Successful exchanges</p></div>
+        <div><p class="text-white text-[18px] font-[450]">${active}</p><p class="text-white/40 text-[11px] uppercase tracking-[0.06em]">Active requests</p></div>
+        <div><p class="text-white text-[18px] font-[450]">${disputes}</p><p class="text-white/40 text-[11px] uppercase tracking-[0.06em]">Disputes</p></div>`;
+    }
+    function stepperHTML(stage){
+      return '<div class="demo-stepper mb-1">' + STAGE_LABELS.map((lbl,i)=>{
+        const idx=i+1, cls = idx<stage?'done':idx===stage?'current':'';
+        return `<div class="demo-step ${cls}"><div class="dot"></div><div class="lbl">${lbl}</div></div>`;
+      }).join('') + '</div>';
+    }
+    function requestCardHTML(q){
+      const r = byId(RESOURCES,q.resourceId);
+      if(!r) return '';
+      const charge = r.charge*q.days, fee = feeFor(charge), lateFee = (q.lateDays||0)*adminSettings.lateFeePerDay, total = charge+fee+r.deposit+lateFee;
+      let action = '';
+      if(q.stage===1) action = `<button data-advance="${q.id}" data-to="2" class="mt-3 h-[38px] px-4 rounded-[10px] bg-[#E9E9E9] text-[#0A0707] text-[13px] font-[450]">Accept request</button>`;
+      else if(q.stage===2) action = `<button data-advance="${q.id}" data-to="3" class="mt-3 h-[38px] px-4 rounded-[10px] bg-[#E9E9E9] text-[#0A0707] text-[13px] font-[450]">Confirm handover</button>`;
+      else if(q.stage===3) action = `<button data-advance="${q.id}" data-to="4" class="mt-3 h-[38px] px-4 rounded-[10px] bg-[#E9E9E9] text-[#0A0707] text-[13px] font-[450]">Mark as borrowed</button>`;
+      else if(q.stage===4) action = `<button data-advance="${q.id}" data-to="5" class="mt-3 h-[38px] px-4 rounded-[10px] bg-[#E9E9E9] text-[#0A0707] text-[13px] font-[450]">Mark return due</button>`;
+      else if(q.stage===5) action = `
+        <div class="flex items-center gap-2 mt-3 mb-2"><label class="text-white/40 text-[11px]">Days late (optional)</label><input type="number" min="0" value="0" class="w-16 glass-card rounded-[8px] px-2 h-[30px] text-[12px] text-white bg-transparent outline-none" data-late-input="${q.id}"></div>
+        <div class="flex flex-wrap gap-2"><button data-confirm-return="${q.id}" class="h-[38px] px-4 rounded-[10px] bg-[#E9E9E9] text-[#0A0707] text-[13px] font-[450]">Confirm returned</button><button data-report-issue="${q.id}" class="h-[38px] px-4 rounded-[10px] border border-red-400/40 text-red-300 text-[13px] font-[450]">Report damage / raise dispute</button></div>`;
+      else if(q.stage===6) action = `<div class="bg-white/5 rounded-[10px] p-3 mt-3 text-[12px] text-white/60">
+        <div class="flex justify-between py-0.5"><span>Charge + fee + deposit${lateFee?' + late fee':''}</span><span class="text-white">${rupee(total)}</span></div>
+        <div class="flex justify-between py-0.5"><span>Deposit status</span><span class="text-white">${q.disputed?'Held — dispute pending':'Refunded'}</span></div></div>`;
+      return `<div class="glass-card rounded-[18px] p-5 mb-4">
+        <div class="flex items-start justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-3"><div class="w-11 h-11 rounded-[10px] bg-white/5 flex items-center justify-center"><i data-lucide="${r.icon}" class="w-5 h-5 text-[#E7B65C]"></i></div>
+          <div><p class="text-white text-[14px] font-[450]">${r.name}</p><p class="text-white/40 text-[12px]">${q.days} day(s) · Owner ${r.owner}</p></div></div>
+          ${q.disputed?'<span class="text-[11px] px-2 py-1 rounded-full bg-red-400/15 text-red-300">Disputed</span>':''}
+        </div>
+        ${stepperHTML(q.stage)}
+        ${action}
+      </div>`;
+    }
+    function renderRequests(){
+      document.getElementById('trustSnapshot').innerHTML = trustSnapshotHTML();
+      document.getElementById('demoRequests').innerHTML = REQUESTS.length ? REQUESTS.slice().reverse().map(requestCardHTML).join('') : '<div class="glass-card rounded-[18px] p-8 text-center text-white/40 text-[13px]">No requests yet — send one from Discover or the AI Assistant.</div>';
+      lucide.createIcons();
+    }
+    document.getElementById('demoRequests').addEventListener('click', e=>{
+      const adv = e.target.closest('[data-advance]');
+      if(adv){ const q=byId(REQUESTS,adv.dataset.advance); if(q){ q.stage=parseInt(adv.dataset.to,10); toast('Stage updated: '+STAGE_LABELS[q.stage-1]+'.'); renderRequests(); } return; }
+      const ret = e.target.closest('[data-confirm-return]');
+      if(ret){ const q=byId(REQUESTS,ret.dataset.confirmReturn); const li=document.querySelector('[data-late-input="'+q.id+'"]'); q.lateDays = li?Math.max(0,parseInt(li.value||'0',10)):0; q.stage=6; const r=byId(RESOURCES,q.resourceId); if(r) r.available=true; toast('Returned in good condition. Trust profile updated.'); renderRequests(); renderDiscover(); return; }
+      const rep = e.target.closest('[data-report-issue]');
+      if(rep){ const q=byId(REQUESTS,rep.dataset.reportIssue); const desc=window.prompt('Briefly describe the issue (damage, loss, etc.):',''); if(desc===null) return; q.stage=6; q.disputed=true; const r=byId(RESOURCES,q.resourceId); if(r) r.available=true; DISPUTES.push({ id:'d'+Date.now(), requestId:q.id, type:'Damage', desc:desc||'No description provided.', status:'Open' }); toast('Dispute logged — visible under Admin → Disputes.','warn'); renderRequests(); renderDiscover(); return; }
+    });
+
+    /* ---------- fee calculator ---------- */
+    function populateFeeResourceSelect(){
+      document.getElementById('feeResourceSelect').innerHTML = RESOURCES.map(r=>`<option value="${r.id}" class="text-black">${r.name} — ₹${r.charge}/day</option>`).join('');
+    }
+    function renderFeeBreakdown(){
+      const sel = document.getElementById('feeResourceSelect');
+      const r = byId(RESOURCES, sel.value) || RESOURCES[0];
+      const days = Math.max(1, parseInt(document.getElementById('feeDays').value||'1',10));
+      const charge = r.charge*days, fee = feeFor(charge), total = charge+fee+r.deposit;
+      document.getElementById('feeBreakdown').innerHTML = `
+        <div class="flex justify-between text-white/60 text-[13px] py-1"><span>Borrowing charge (${days} × ₹${r.charge})</span><span>${rupee(charge)}</span></div>
+        <div class="flex justify-between text-white/60 text-[13px] py-1"><span>Platform fee (${adminSettings.platformFeePercent}%)</span><span>${rupee(fee)}</span></div>
+        <div class="flex justify-between text-white/60 text-[13px] py-1"><span>Security deposit</span><span>${rupee(r.deposit)}</span></div>
+        <div class="flex justify-between text-white text-[15px] font-[450] pt-2 mt-2 border-t border-white/10"><span>Transaction amount</span><span>${rupee(total)}</span></div>`;
+    }
+    document.getElementById('feeResourceSelect').addEventListener('change', renderFeeBreakdown);
+    document.getElementById('feeDays').addEventListener('input', renderFeeBreakdown);
+
+    /* ---------- AI assistant ---------- */
+    const AI_EXAMPLES = ['I need to make a reel for my club event tomorrow','My laptop broke and I have a coding assignment due','Going camping this weekend with friends','Need to fix a loose hinge in my room'];
+    function renderAiExamples(){
+      document.getElementById('aiExamples').innerHTML = AI_EXAMPLES.map(ex=>`<button class="text-[12px] text-white/60 border border-white/10 rounded-full px-3 py-2 hover:text-white hover:border-[#E7B65C]/50 transition-colors" data-example="${ex}">${ex}</button>`).join('');
+    }
+    document.getElementById('aiExamples').addEventListener('click', e=>{ const chip=e.target.closest('[data-example]'); if(chip){ document.getElementById('aiQuery').value=chip.dataset.example; runAiSearch(); } });
+    document.getElementById('aiSubmit').addEventListener('click', runAiSearch);
+    document.getElementById('aiResult').addEventListener('click', e=>{ const btn=e.target.closest('[data-request-id]'); if(btn && !btn.disabled) openBorrowModal(btn.dataset.requestId); });
+    function scoreResource(query, r){
+      const words = query.toLowerCase().split(/[^a-z0-9]+/).filter(w=>w.length>2);
+      const hay = (r.name+' '+r.cat+' '+r.tags.join(' ')+' '+r.desc).toLowerCase();
+      let score=0; const matched=[];
+      words.forEach(w=>{ if(hay.includes(w)){ score++; matched.push(w); } });
+      return { score, matched };
+    }
+    function aiCardHTML(r, matched){
+      return `<div class="glass-card rounded-[20px] p-5">
+        <div class="w-full h-[90px] rounded-[14px] bg-white/5 flex items-center justify-center mb-3"><i data-lucide="${r.icon}" class="w-7 h-7 text-[#E7B65C]"></i></div>
+        <span class="text-[10px] uppercase tracking-[0.08em] text-[#E7B65C] bg-white/5 px-2 py-1 rounded-[6px]">${r.cat}</span>
+        <p class="text-white text-[15px] font-[450] mt-2 mb-1">${r.name}</p>
+        <p class="text-white/40 text-[12px] mb-2">${r.owner} · ${r.location} · ★${r.rating}</p>
+        <p class="text-[#E7B65C]/80 text-[11px] mb-3">Matched on: ${matched.join(', ')}</p>
+        <div class="flex items-center justify-between mb-3"><div><span class="text-white text-[15px] font-[450]">₹${r.charge}</span><span class="text-white/40 text-[11px]">/day</span></div><div class="text-white/40 text-[11px]">Deposit ₹${r.deposit}</div></div>
+        <button ${r.available?'':'disabled'} data-request-id="${r.id}" class="w-full h-[38px] rounded-[10px] text-[13px] font-[450] ${r.available?'bg-[#E9E9E9] text-[#0A0707]':'bg-white/5 text-white/30 cursor-not-allowed'}">${r.available?'Request to borrow':'Currently unavailable'}</button>
+      </div>`;
+    }
+    function runAiSearch(){
+      const q = document.getElementById('aiQuery').value.trim();
+      const resultEl = document.getElementById('aiResult');
+      if(!q){ resultEl.innerHTML = '<p class="text-white/40 text-[13px]">Type a need above, or tap an example.</p>'; return; }
+      const scored = RESOURCES.map(r=>({ r, ...scoreResource(q,r) })).filter(x=>x.score>0).sort((a,b)=> b.score-a.score || b.r.rating-a.r.rating).slice(0,3);
+      if(!scored.length){ resultEl.innerHTML = '<p class="text-white/40 text-[13px]">No close matches — try describing the task differently, or browse Discover.</p>'; return; }
+      resultEl.innerHTML = '<p class="text-[#E7B65C] text-[12px] font-[450] uppercase tracking-[0.08em] mb-3">Recommended</p><div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">' + scored.map(x=> aiCardHTML(x.r, x.matched)).join('') + '</div>';
+      lucide.createIcons();
+    }
+
+    /* ---------- admin ---------- */
+    let adminSub = 'overview';
+    function renderAdmin(){
+      const area = document.getElementById('adminArea');
+      if(!adminSettings.loggedIn){
+        area.innerHTML = `<div class="glass-card rounded-[20px] p-8 max-w-[420px]">
+          <p class="text-white text-[16px] font-[450] mb-2">Admin sign-in</p>
+          <p class="text-white/40 text-[12px] mb-5">Frontend-only demo — any password signs you in.</p>
+          <input id="adminPass" type="password" placeholder="Password" class="w-full glass-card rounded-[10px] px-3 h-[44px] text-[14px] text-white bg-transparent outline-none mb-4">
+          <button id="adminLoginBtn" class="w-full h-[46px] rounded-[12px] bg-[#E9E9E9] text-[#0A0707] text-[14px] font-[450]">Sign in</button></div>`;
+        document.getElementById('adminLoginBtn').addEventListener('click', ()=>{ adminSettings.loggedIn=true; toast('Welcome back, admin.'); renderAdmin(); });
+        return;
+      }
+      const subtabs = [['overview','Overview'],['approvals','Approvals'],['disputes','Disputes'],['users','Users'],['fees','Fee settings'],['transactions','Transactions']];
+      area.innerHTML = `<div class="flex flex-wrap gap-2 mb-6">${subtabs.map(([k,l])=>`<button data-sub="${k}" class="h-[36px] px-4 rounded-[8px] text-[12px] font-[450] ${adminSub===k?'bg-[#E7B65C] text-[#0A0707]':'bg-white/5 text-white/60'}">${l}</button>`).join('')}<button id="adminLogoutBtn" class="h-[36px] px-4 rounded-[8px] text-[12px] font-[450] bg-white/5 text-white/40 ml-auto">Log out</button></div><div id="adminSubArea"></div>`;
+      area.querySelectorAll('[data-sub]').forEach(b=> b.addEventListener('click', ()=>{ adminSub=b.dataset.sub; renderAdmin(); }));
+      document.getElementById('adminLogoutBtn').addEventListener('click', ()=>{ adminSettings.loggedIn=false; renderAdmin(); });
+      const sub = document.getElementById('adminSubArea');
+      if(adminSub==='overview'){
+        const revenue = REQUESTS.reduce((sum,q)=>{ const r=byId(RESOURCES,q.resourceId); return r?sum+feeFor(r.charge*q.days):sum; },0);
+        sub.innerHTML = `<div class="grid sm:grid-cols-3 gap-4">
+          <div class="glass-card rounded-[14px] p-4"><p class="text-white text-[22px] font-[450]">${RESOURCES.length}</p><p class="text-white/40 text-[12px] mt-1">Total resources</p></div>
+          <div class="glass-card rounded-[14px] p-4"><p class="text-white text-[22px] font-[450]">${REQUESTS.filter(q=>q.stage<6).length}</p><p class="text-white/40 text-[12px] mt-1">Active exchanges</p></div>
+          <div class="glass-card rounded-[14px] p-4"><p class="text-white text-[22px] font-[450]">${REQUESTS.filter(q=>q.stage===6).length}</p><p class="text-white/40 text-[12px] mt-1">Completed exchanges</p></div>
+          <div class="glass-card rounded-[14px] p-4"><p class="text-white text-[22px] font-[450]">${DISPUTES.filter(d=>d.status==='Open').length}</p><p class="text-white/40 text-[12px] mt-1">Open disputes</p></div>
+          <div class="glass-card rounded-[14px] p-4"><p class="text-white text-[22px] font-[450]">${PENDING_APPROVALS.length}</p><p class="text-white/40 text-[12px] mt-1">Pending approvals</p></div>
+          <div class="glass-card rounded-[14px] p-4"><p class="text-white text-[22px] font-[450]">${rupee(revenue)}</p><p class="text-white/40 text-[12px] mt-1">Platform fee revenue</p></div></div>`;
+      }
+      if(adminSub==='approvals'){
+        sub.innerHTML = PENDING_APPROVALS.length ? PENDING_APPROVALS.map(p=>`<div class="glass-card rounded-[16px] p-4 mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div><p class="text-white text-[14px] font-[450]">${p.name}</p><p class="text-white/40 text-[12px]">${p.cat} · submitted by ${p.submittedBy} · ₹${p.charge}/day</p></div>
+          <div class="flex gap-2"><button data-approve="${p.id}" class="h-[34px] px-4 rounded-[8px] bg-[#E9E9E9] text-[#0A0707] text-[12px] font-[450]">Approve</button><button data-reject="${p.id}" class="h-[34px] px-4 rounded-[8px] border border-red-400/40 text-red-300 text-[12px] font-[450]">Reject</button></div></div>`).join('') : '<p class="text-white/40 text-[13px]">No pending listings to review.</p>';
+      }
+      if(adminSub==='disputes'){
+        sub.innerHTML = DISPUTES.length ? DISPUTES.map(d=>{ const q=byId(REQUESTS,d.requestId); const r=q?byId(RESOURCES,q.resourceId):null; return `<div class="glass-card rounded-[16px] p-4 mb-3">
+          <div class="flex items-center justify-between flex-wrap gap-2"><p class="text-white text-[14px] font-[450]">${r?r.name:'Resource'}</p><span class="text-[11px] px-2 py-1 rounded-full ${d.status==='Resolved'?'bg-[#E7B65C]/15 text-[#E7B65C]':'bg-red-400/15 text-red-300'}">${d.status}</span></div>
+          <p class="text-white/50 text-[13px] mt-2">${d.desc}</p>${d.status!=='Resolved'?`<button data-resolve="${d.id}" class="mt-3 h-[34px] px-4 rounded-[8px] bg-[#E9E9E9] text-[#0A0707] text-[12px] font-[450]">Mark resolved</button>`:''}</div>`; }).join('') : '<p class="text-white/40 text-[13px]">No disputes on record.</p>';
+      }
+      if(adminSub==='users'){
+        sub.innerHTML = OWNERS.map(u=>`<div class="glass-card rounded-[14px] p-4 mb-3 flex items-center justify-between flex-wrap gap-3">
+          <p class="text-white/80 text-[13px]">${u.name} <span class="text-white/40">· ${u.dept}, ${u.year} · Trust ${u.trust}</span> ${u.suspended?'<span class="text-red-300 text-[11px] ml-2">Suspended</span>':''}</p>
+          <button data-toggle-suspend="${u.id}" class="h-[32px] px-4 rounded-[8px] text-[12px] font-[450] ${u.suspended?'bg-white/5 text-white/60':'border border-red-400/40 text-red-300'}">${u.suspended?'Reinstate':'Suspend'}</button></div>`).join('');
+      }
+      if(adminSub==='fees'){
+        sub.innerHTML = `<div class="glass-card rounded-[16px] p-6 max-w-[420px]">
+          <p class="text-white text-[14px] font-[450] mb-4">Platform fee</p>
+          <div class="flex items-center gap-3 mb-6"><input type="range" id="feeSlider" min="0" max="20" value="${adminSettings.platformFeePercent}" class="flex-1"><span id="feeSliderVal" class="text-white text-[13px] w-10">${adminSettings.platformFeePercent}%</span></div>
+          <p class="text-white text-[14px] font-[450] mb-2">Late fee (per day)</p>
+          <input id="lateFeeInput" type="number" min="0" value="${adminSettings.lateFeePerDay}" class="w-full glass-card rounded-[10px] px-3 h-[42px] text-[14px] text-white bg-transparent outline-none">
+          <p class="text-white/30 text-[11px] mt-3">Both apply instantly across the Fee Calculator and any new borrowing requests.</p></div>`;
+        document.getElementById('feeSlider').addEventListener('input', e=>{ adminSettings.platformFeePercent=parseInt(e.target.value,10); document.getElementById('feeSliderVal').textContent=adminSettings.platformFeePercent+'%'; });
+        document.getElementById('lateFeeInput').addEventListener('input', e=>{ adminSettings.lateFeePerDay=Math.max(0,parseInt(e.target.value||'0',10)); });
+      }
+      if(adminSub==='transactions'){
+        sub.innerHTML = REQUESTS.length ? `<div class="overflow-x-auto"><table class="w-full text-[12px] text-white/70"><thead><tr class="text-left text-white/40 border-b border-white/10"><th class="py-2 pr-4">Resource</th><th class="py-2 pr-4">Days</th><th class="py-2 pr-4">Charge</th><th class="py-2 pr-4">Fee</th><th class="py-2 pr-4">Deposit</th><th class="py-2 pr-4">Total</th><th class="py-2">Status</th></tr></thead><tbody>` + REQUESTS.map(q=>{ const r=byId(RESOURCES,q.resourceId); if(!r) return ''; const charge=r.charge*q.days, fee=feeFor(charge), total=charge+fee+r.deposit; return `<tr class="border-b border-white/5"><td class="py-2 pr-4">${r.name}</td><td class="py-2 pr-4">${q.days}</td><td class="py-2 pr-4">${rupee(charge)}</td><td class="py-2 pr-4">${rupee(fee)}</td><td class="py-2 pr-4">${rupee(r.deposit)}</td><td class="py-2 pr-4">${rupee(total)}</td><td class="py-2">${STAGE_LABELS[q.stage-1]}</td></tr>`; }).join('') + `</tbody></table></div>` : '<p class="text-white/40 text-[13px]">No transactions yet.</p>';
+      }
+      lucide.createIcons();
+    }
+    document.getElementById('adminArea').addEventListener('click', e=>{
+      const app = e.target.closest('[data-approve]');
+      if(app){ const idx=PENDING_APPROVALS.findIndex(p=>p.id===app.dataset.approve); if(idx>-1){ const p=PENDING_APPROVALS[idx]; RESOURCES.push({ id:'r'+(RESOURCES.length+1), name:p.name, cat:p.cat, icon:p.icon||'package', owner:p.submittedBy, condition:'Good', available:true, location:'Campus', distance:1.0, charge:p.charge, deposit:p.deposit, rating:4.0, tags:[p.cat.toLowerCase()], desc:p.desc||'Newly approved community listing.' }); PENDING_APPROVALS.splice(idx,1); toast(p.name+' approved — now live in Discover.'); populateCategoryFilter(); renderDiscover(); populateFeeResourceSelect(); renderAdmin(); } return; }
+      const rej = e.target.closest('[data-reject]');
+      if(rej){ const idx=PENDING_APPROVALS.findIndex(p=>p.id===rej.dataset.reject); if(idx>-1){ const p=PENDING_APPROVALS[idx]; PENDING_APPROVALS.splice(idx,1); toast(p.name+' rejected.','warn'); renderAdmin(); } return; }
+      const res = e.target.closest('[data-resolve]');
+      if(res){ const d=byId(DISPUTES,res.dataset.resolve); if(d){ d.status='Resolved'; toast('Dispute marked resolved.'); renderAdmin(); } return; }
+      const sus = e.target.closest('[data-toggle-suspend]');
+      if(sus){ const u=byId(OWNERS,sus.dataset.toggleSuspend); if(u){ u.suspended=!u.suspended; toast(u.name+(u.suspended?' suspended.':' reinstated.'), u.suspended?'warn':undefined); renderAdmin(); } return; }
+    });
+
+    /* ---------- init ---------- */
+    populateCategoryFilter();
+    renderDiscover();
+    renderAiExamples();
+    populateFeeResourceSelect();
+    renderFeeBreakdown();
+    renderRequests();
+    lucide.createIcons();
+  })();
+
+  /* ---------- scroll reveal ---------- */
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el=> io.observe(el));
+</script>
+</body>
+</html>
